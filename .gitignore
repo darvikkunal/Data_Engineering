@@ -1,3 +1,5 @@
 .python-version
 sql/connection_sql.py
 sql/__pycache__/connection_sql.cpython-312.pyc
+resources
+sql/__pycache__
