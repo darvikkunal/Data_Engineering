@@ -74,3 +74,29 @@ select TOP 2 *
 FROM MyDatabase.dbo.orders
 order by order_date desc;
 
+--DDL Commands--
+
+-- Create a new table called persons with columns: id, person_name, birth_date and phone
+
+CREATE TABLE persons (
+    id INT NOT NULL,
+    person_name VARCHAR(50) NOT NULL,
+    birth_date DATE,
+    phone VARCHAR(15) NOT NULL,
+    CONSTRAINT pk_persons PRIMARY KEY (id)
+);
+SELECT * FROM persons;
+
+-- Add a new column called email to the persons table
+
+ALTER TABLE persons
+ADD email VARCHAR(50) NOT NULL;
+
+-- Remove the column phone from the persons table
+
+ALTER TABLE persons
+DROP COLUMN phone; 
+
+-- Delete the table persons from the database
+
+DROP table persons;
