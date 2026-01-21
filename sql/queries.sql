@@ -74,7 +74,7 @@ select TOP 2 *
 FROM MyDatabase.dbo.orders
 order by order_date desc;
 
---DDL Commands--
+                            --- DDL Commands ---
 
 -- Create a new table called persons with columns: id, person_name, birth_date and phone
 
@@ -100,3 +100,49 @@ DROP COLUMN phone;
 -- Delete the table persons from the database
 
 DROP table persons;
+
+                                        --- DML Commands ---
+
+-- INSERT --
+select * from customers;
+INSERT INTO customers (id, first_name , country , score)
+VALUES 
+    (8, 'BELLA', 'INDIA' , 900),
+    (9,'SamLIP', NULL , 100),
+    (10, 'KLPIECH', 'AUZI' , 01);
+
+
+-- Copy data from 'customers' table into 'persons'
+INSERT INTO persons (id,person_name , birth_date , phone)
+SELECT 
+    id , first_name , NULL as NULL_COL , 'Unknown' as UNKNOWN
+FROM customers;
+
+SELECT * FROM persons;
+
+-- Change the score of customer with ID 6 to 0
+UPDATE customers
+SET score = 0
+WHERE id = 6;
+
+select * from customers;
+
+-- Change the score of customer with ID 10 to 0 and update the country to 'UK' 
+UPDATE customers
+SET 
+    score = 0,
+    country = 'UK'
+WHERE id = 10;
+
+-- UPDATE ALL CUSTOMERS WITH A NULL SCORE BY SETTING THEIR SCORE TO 0
+UPDATE customers
+SET
+    score = 0
+WHERE SCORE IS NULL;
+
+-- DELETE ALL CUSTOMERS WITH AN ID GREATER THAN 5
+DELETE FROM customers
+WHERE ID > 5;
+
+-- DELETE ALL DATA FROM TABLE PERSONS
+TRUNCATE TABLE PERSONS;
