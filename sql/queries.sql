@@ -146,3 +146,151 @@ WHERE ID > 5;
 
 -- DELETE ALL DATA FROM TABLE PERSONS
 TRUNCATE TABLE PERSONS;
+
+                            --- Filtering Data ---
+
+-- Retrieve all the customers from Germany
+select * from customers
+where country = 'Germany';
+
+-- Retrieve all the customers not from Germany
+select * from customers
+where country != 'Germany';
+
+-- Retrieve all the customers who score is > 500
+select * from customers
+where score > 500;
+
+-- Retrieve all the customers who score is > 500 or more
+select * from customers
+where score >= 500;
+
+-- Retrieve all the customers who score is < 500
+select * from customers
+where score < 500;
+
+-- Retrieve all the customers who score is < 500 or less
+select * from customers
+where score <= 500;
+
+-- Retrieve all customers who are from USA and have a score greater than 500
+select * from customers where country = 'USA' and score > 500;
+
+-- Retrieve all customers who are either from USA OR have a score greater than 500
+select * from customers where country = 'USA' OR score > 500;
+
+-- Retrieve all the customers who score is not < 500
+select * from customers
+where NOT score < 500;
+
+-- Retrieve all the customers whose score falls in the range between 100 and 500
+--Method 1
+select * from customers
+where score BETWEEN 100 AND 500;
+--Method 2
+select * from customers
+where score >= 100 AND score <=500;
+
+-- Retrieve all customers from either Germany or USA
+select * from customers
+where country in ('Germany' ,'USA');
+
+-- Retrieve all customers whose first name starts with "M"
+select * from customers
+where first_name like 'M%';
+
+-- Retrieve all customers whose first name ends with "N"
+select * from customers
+where first_name like '%N';
+
+-- Find all customers whose first name contains 'r'
+select * from customers
+where first_name like '%r%';
+
+-- Find all customers whose first name contains 'r' in the third position
+select * from customers
+where first_name like '__r%';
+
+                            --- BASIC JOINS ---
+
+-- Retrieve all data from customers and orders as separate results
+select * from customers;
+select * from orders;
+
+-- INNER JOIN --> Get all customers along with their orders, but only for customers who have placed an order
+select c.id, c.first_name, o.order_id , o.sales 
+FROM customers c
+INNER JOIN orders o on c.id = o.customer_id;
+
+-- LEFT JOIN --> Get all customers along with their orders, including those without orders
+select c.id , c.first_name , c.country , c.score , o.order_id ,o.order_date ,o.sales
+from customers c
+LEFT JOIN orders o on c.id = o.customer_id;
+
+-- RIGHT JOIN --> Get all customers along with their orders, including orders without matching customers
+select c.id , c.first_name , c.country , c.score , o.order_id ,o.order_date ,o.sales
+from customers c
+RIGHT JOIN orders o on c.id = o.customer_id;
+-- LEFT JOIN --> Get all customers along with their orders, including those without orders [Tables Switching]
+select c.id , c.first_name , c.country , c.score , o.order_id ,o.order_date ,o.sales
+from  orders o
+RIGHT JOIN customers c on c.id = o.customer_id;
+-- Full Join --> Get all customers and all orders, even if there's no match
+select c.id , c.first_name , c.country , c.score , o.order_id ,o.order_date ,o.sales
+from  orders o
+FULL JOIN customers c on c.id = o.customer_id;
+
+                            --- ADVANCED JOINS ---
+-- LEFT ANTI_JOIN --> Get all customers who haven't placed any order
+SELECT *
+from customers c
+LEFT JOIN orders o on c.id = o.customer_id
+WHERE o.customer_id IS NULL;
+
+-- Right anti join --> Get all orders without mathching customers
+SELECT *
+from customers c
+RIGHT JOIN orders o on c.id = o.customer_id
+WHERE c.id IS NULL;
+
+-- Get all orders without matching customers (using Left Join)
+SELECT *
+from orders o
+LEFT JOIN customers c on  o.customer_id = c.id
+WHERE c.id IS NULL;
+
+-- Full Anti Join --> Find customers without orders and orders without customers 
+SELECT *
+from customers c
+FULL JOIN orders o on c.id = o.customer_id
+WHERE o.customer_id IS NULL OR c.id IS NULL;
+
+-- Get all customers along with their orders, but only for customers who have placed an order (without using INNER JOIN)
+SELECT *
+from customers c
+LEFT JOIN orders o on c.id = o.customer_id
+WHERE o.customer_id IS NOT NULL;
+
+-- Cross JOIN --> Generate all possible combination of customers and orders
+SELECT *
+FROM customers
+CROSS JOIN orders;
+
+-- Using SalesDB, retrieve a list of all orders, along with the related customer, product, and employee details.
+--For each order, display:
+-- Order ID
+-- Customer's name
+-- Product name
+-- Sales amount
+-- Product price
+-- Salesperson's name
+
+USE SalesDB;
+
+select o.OrderID , CONCAT (c.FirstName,' ',c.LastName) as Customer_nm ,(o.Quantity*o.Sales) as sales_amount, p.Product ,
+p.Price , CONCAT (e.FirstName,' ',e.LastName) as Salesperson_nm 
+from 
+    sales.Orders o
+LEFT JOIN Sales.Customers c ON o.CustomerID = c.CustomerID
+LEFT JOIN sales.Products p on o.ProductID = p.ProductID
+LEFT JOIN sales.Employees e ON o.SalesPersonID = e.EmployeeID;
