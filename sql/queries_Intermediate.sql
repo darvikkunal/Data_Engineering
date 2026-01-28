@@ -294,3 +294,118 @@ from
 LEFT JOIN Sales.Customers c ON o.CustomerID = c.CustomerID
 LEFT JOIN sales.Products p on o.ProductID = p.ProductID
 LEFT JOIN sales.Employees e ON o.SalesPersonID = e.EmployeeID;
+
+                            --- SET OPERATORS JOINS ---
+-- UNION --> Combine the data from customers and Employees into one table
+SELECT
+FirstName,LastName 
+FROM Sales.Customers
+UNION
+SELECT
+FirstName,
+LastName
+FROM Sales.Employees;
+
+-- UNION ALL --> Combine the data from customers and Employees into one table including duplicates
+SELECT
+FirstName,LastName 
+FROM Sales.Customers
+UNION ALL
+SELECT
+FirstName,
+LastName
+FROM Sales.Employees;
+
+-- Except --> Find the employees who are not customers at the same time
+SELECT
+FirstName,LastName 
+FROM Sales.Employees
+EXCEPT
+SELECT
+FirstName,
+LastName
+FROM Sales.Customers;
+
+-- Intersect --> Find the employees who are also customers
+SELECT
+FirstName,LastName 
+FROM Sales.Employees
+INTERSECT
+SELECT
+FirstName,
+LastName
+FROM Sales.Customers;
+
+--SQL TASK
+-- Orders data are stored in separate tables (Orders and OrdersArchive)
+-- Combine all orders data into one report without duplicates.
+select
+    'Orders' as sourceTable,
+    OrderID,ProductID,CustomerID,SalesPersonID  ,OrderDate,ShipDate,OrderStatus,ShipAddress,BillAddress,Quantity,Sales,CreationTime
+from Sales.Orders
+UNION
+select
+    'OrdersArchive' as sourceTable,
+    OrderID,ProductID,CustomerID,SalesPersonID  ,OrderDate,ShipDate,OrderStatus,ShipAddress,BillAddress,Quantity,Sales,CreationTime
+from Sales.OrdersArchive
+ORDER BY OrderID;
+
+                            --- SQL FUNCTIONS ---
+-- CONCAT --> Show a list of customers firstname together with their country in one column
+select  CONCAT(first_name, '-',country) as Name_country
+FROM MyDatabase.dbo.customers;
+
+-- Transform the customer's first name to lowercase & Uppercase
+select 
+    lower(first_name) as low_name,
+    upper(first_name) as UPPER_name
+FROM MyDatabase.dbo.customers;
+
+-- Find customers whose first name contains leading or trailing spaces
+SELECT
+    first_name,
+    LEN(first_name) as len_name,
+    LEN(TRIM(first_name)) as len_trim_name,
+    LEN(first_name) - LEN(TRIM(first_name)) as flag
+FROM MyDatabase.dbo.customers
+WHERE len(first_name) != len(trim(first_name))
+--where first_name != trim(first_name);
+
+-- Remove dashes (-) from a phone number
+select
+'123-456-7890' AS PHONE,
+REPLACE('123-456-7890', '-','/') as Clean_Phone
+
+select
+'report.txt' as file_nm,
+REPLACE('report.txt','.txt','.json') as json_file
+
+-- Calculate the lenght of each customer's first name
+select
+    first_name,
+    len(first_name) len_firstnm
+FROM MyDatabase.dbo.customers;
+
+-- Retrieve the first two and last 2 characters of each first name
+select
+    first_name,
+    LEFT(TRIM(first_name),2) F_firstnm,
+    RIGHT(TRIM(first_name),2) L_firstnm
+FROM MyDatabase.dbo.customers;
+
+-- Retrieve a list of customers first names after removing the first character
+select
+    first_name,
+    SUBSTRING(TRIM(first_name),2,LEN(first_name)) sub_firstnm
+FROM MyDatabase.dbo.customers;
+
+---     Number Functions      ---
+SELECT
+3.516,
+ROUND(3.516,2) AS round_2,
+ROUND(3.516,1) AS round_1,
+ROUND(3.516,0) AS round_0;
+
+SELECT
+-3.516,
+ABS(-516);
