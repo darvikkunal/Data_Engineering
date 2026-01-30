@@ -409,3 +409,76 @@ ROUND(3.516,0) AS round_0;
 SELECT
 -3.516,
 ABS(-516);
+
+-----      DATE TIME FUNCTIONS     -----
+
+select ORDERID, OrderDate, ShipDate , CreationTime, '2026-08-20' Hardcoded ,
+GETDATE() TODAY
+FROM Sales.Orders;
+
+-- YEAR --
+select 
+    ORDERID,
+    ShipDate ,
+    CreationTime,
+    YEAR(CreationTime) as YR_CT,
+    MONTH(CreationTime) as M_CT,
+    DAY(CreationTime) as DY_CT
+FROM Sales.Orders;
+
+--- DATEPART ---
+select 
+orderID,
+CreationTime,
+DATEPART(YEAR,CreationTime) as YEAR_dp,
+DATEPART(MONTH,CreationTime) as MONTH_dp,
+DATEPART(DAY,CreationTime) as DAY_dp,
+DATEPART(HOUR,CreationTime) as HOUR_dp,
+DATEPART(QUARTER,CreationTime) as QUARTER_dp,
+DATEPART(WEEKDAY,CreationTime) as weekday_dp,
+DATEPART(WEEK,CreationTime) as week_dp
+FROM Sales.Orders;
+
+--- DATENAME ---
+select 
+orderID,
+CreationTime,
+DATENAME(YEAR,CreationTime) as YEAR_dn,
+DATENAME(MONTH,CreationTime) as Month_dn,
+DATENAME(WEEKDAY,CreationTime) as weekday_dn
+FROM Sales.Orders;
+
+--- DATETRUNC ---
+select 
+orderID,
+CreationTime,
+DATETRUNC(day ,CreationTime) as MINUTE_DT
+FROM Sales.Orders;
+
+--- ENDOFMONTH ---
+select 
+orderID,
+CreationTime,
+EOMONTH(CreationTime) as EODM_DT,
+CAST(DATETRUNC(month,CreationTime) AS DATE) as StartofMonth
+FROM Sales.Orders;
+
+-- TASK --
+-- How many orders were placed each year? and each month?
+select 
+count(*) as NO_OF_ORDERS, 
+YEAR(OrderDate) as ORDER_YEAR,
+DATENAME(MONTH,OrderDate) as ORDER_MONHTH
+from Sales.Orders
+group by 
+DATENAME(MONTH,OrderDate),
+YEAR(OrderDate);
+
+-- Show all orders that were placed during the month of February
+select 
+orderID,
+ProductID,
+Quantity,
+OrderDate
+from sales.Orders
+where MONTH(OrderDate) = 2;
