@@ -482,3 +482,116 @@ Quantity,
 OrderDate
 from sales.Orders
 where MONTH(OrderDate) = 2;
+
+--- enable CLR ---
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'clr enabled', 1;
+RECONFIGURE;
+
+----    DATETIME PART2 ---
+
+-- FORMAT --
+select
+ORDERID,
+creationTime,
+FORMAT(CreationTime,'dd') dd
+FROM Sales.Orders;
+
+SELECT 
+ORDERID, 
+creationTime, 
+DATEPART(day, CreationTime) AS dd 
+FROM Sales.Orders;
+
+-- Show Creation Time using the following format : Day Wed Jan Q1 2025 12:34:56 PM
+select
+ORDERID,
+creationTime,
+'Day' + FORMAT(CreationTime,'ddd MMM') +
+'Q' + DATENAME(QUARTER,CreationTime) + ' ' +
+FORMAT(CreationTime, 'yyyy hh:mm:ss tt') as CustomFormat
+FROM Sales.Orders;
+
+
+-- Exercise
+SELECT
+FORMAT(orderDate, 'MMM yy') OrderDate,
+count(*)
+From Sales.Orders
+GROUP BY OrderDate;
+
+-- CONVERT --
+SELECT
+CONVERT(INT, '123') as str_to_int,
+CONVERT(DATE, '2026-01-31') as str_to_date,
+CONVERT(DATE, CreationTime) as datetime_to_dateconvert,
+CONVERT(VARCHAR, CreationTime, 32) AS USA_STNDRD,
+CONVERT(VARCHAR, CreationTime, 34) AS EURO_STNDRD
+From Sales.Orders;
+
+--- CAST ---
+SELECT
+CAST('123' AS INT) AS [String to Int],
+CAST(123 AS char(15)) AS [Int to String],
+CAST('2025-08-20' AS DATE) AS [Str to DATE],
+CAST('2025-08-20' AS DATETIME) AS [Str to DATETIME],
+CreationTime,
+CAST(CreationTime AS DATE) AS [CreationDATE]
+FROM Sales.Orders
+
+--- DATEADD() ---
+SELECT
+OrderID,
+OrderDate,
+DATEADD(month, 3 ,OrderDate) AS ThreeMonthsLater,
+DATEADD(year, 2 , OrderDate) AS TwoYearsLater,
+DATEADD(day, -10 , OrderDate) AS TenDaysBefore
+FROM Sales.Orders;
+
+-- DATEDIFF() --
+-- Calculate the age of employees
+select 
+    CONCAT(FirstName, '' ,LastName) as Emp_Name,
+    Gender,
+    BirthDate,
+    DATEDIFF(YEAR, Birthdate, GETDATE()) AS AGE
+from Sales.Employees
+ORDER BY age desc;
+
+-- Find the average shipping duration in days for each month
+SELECT 
+    MONTH(OrderDate) as OrderDate,
+    AVG(DATEDIFF(day,OrderDate,ShipDate)) AS day2Ship
+from Sales.Orders
+GROUP BY Month(OrderDate);
+
+-- Find the number of days between each order and previous order
+SELECT
+    OrderID,
+    OrderDate as CurrentOrderDate,
+    LAG(OrderDate) OVER (ORDER BY OrderDate) as previousorderdate,
+    DATEDIFF(day,LAG(OrderDate) OVER (ORDER BY OrderDate),OrderDate) as OrderTimeGAP
+FROM Sales.Orders; 
+
+-- ISDATE() --
+SELECT
+ISDATE('123') DATECHECK1,
+ISDATE('2025-08-20') DATECHECK2,
+ISDATE('20-08-2025') DATECHECK3,
+ISDATE('2025') DATECHECK4
+
+SELECT
+    ORDERDATE,
+    ISDATE(ORDERDATE),
+    CASE WHEN ISDATE(ORDERDATE) = 1 THEN CAST(ORDERDATE AS DATE)
+        ELSE '9999-01-01'
+    END NEWORDERDATE
+FROM
+(
+    SELECT '2025-08-20' AS ORDERDATE UNION
+    SELECT '2025-08-21' UNION
+    SELECT '2025-08-23' UNION
+    SELECT '2025-08'
+)T
+WHERE ISDATE(ORDERDATE) = 0;
