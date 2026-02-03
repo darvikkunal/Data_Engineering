@@ -595,3 +595,156 @@ FROM
     SELECT '2025-08'
 )T
 WHERE ISDATE(ORDERDATE) = 0;
+
+-- ISNULL() & COALESCE()
+-- Find the average score of the customers
+SELECT customerID , score,
+avg(score) as avg_score0,
+avg(score) OVER () as avg_score1,
+AVG(COALESCE(score,0)) OVER () avgscore2
+from Sales.Customers
+group by customerID , score;
+
+-- Display the full name of customers in a single field
+-- by merging their first and last names , and add 10 bonus points to each customer's score
+select
+    CustomerID,
+    concat(FirstName,' ',COALESCE(LastName,'')) as FullName,
+    COALESCE(Score, 0) + 10 as bonus
+from Sales.Customers;
+
+-- Sort the customers from lowest to highest scores with NULLs appearing last.
+select
+    customerID,
+    score,
+    COALESCE(score,9999999),
+    CASE WHEN score is null then 1 else 0 end flag
+FROM Sales.Customers
+ORDER BY CASE WHEN score is null then 1 else 0 end , score;
+
+-- Find the sales price for each order by dividing the sales by the quantity.
+SELECT 
+    orderID,
+    Sales,
+    Quantity,
+    (sales/NULLIF(Quantity,0)) as saleprice
+from Sales.Orders;
+
+-- Identify the customers who have no scores
+select 
+    CustomerID,
+    score
+from sales.Customers
+where Score is NULL;
+
+-- List all customers who have scores
+select 
+    CustomerID,
+    score
+from sales.Customers
+where Score is NOT NULL;
+
+-- List all details for customers who have not placed any orders
+select
+    c.CustomerID,
+    c.FirstName,
+    o.OrderID
+from Sales.Customers c
+LEFT JOIN Sales.Orders o on c.CustomerID=o.CustomerID
+where o.CustomerID is null;
+
+-- NULL vs BLANK vs EMPTY STRING
+with orders AS (
+    SELECT 1 ID, 'A' CATEGORY UNION
+    SELECT 2, NULL UNION -- NULL
+    SELECT 3, '' UNION -- EMPTY STRING
+    SELECT 4, '  ' -- BLANK
+)
+SELECT 
+    *, 
+    DATALENGTH(CATEGORY) CAT_LEN , 
+    DATALENGTH(TRIM(CATEGORY)) AS POLICY1,
+    NULLIF(TRIM(CATEGORY),'') as POLICY2,
+    COALESCE(NULLIF(TRIM(CATEGORY),''),'UNKOWN') AS POLICY3
+FROM ORDERS;
+
+---     CASE       ---
+/*Generate a report showing the total sales for each category:
+High: sales > 50
+Medium: sales between 20 and 50
+Low: sales <= 20
+Sort the result from lowest to highest.*/
+
+SELECT
+    category,
+    sum(sales) as totalsales
+FROM(
+    SELECT
+        orderID,
+        Sales,
+    CASE
+        WHEN sales > 50 THEN 'High'
+        when Sales > 20 THEN 'Medium'
+        else 'low'
+    END category
+    from Sales.Orders
+)T
+GROUP by category
+ORDER BY totalsales desc;
+
+-- Retrive employee details with gender displayed as full text
+SELECT
+employeeID,
+FirstName,
+LastName,
+Gender,
+CASE 
+    when GENDER = 'M' THEN 'Male'
+    WHEN Gender = 'F' THEN 'Female'
+    ELSE 'NA'
+END GenderFull
+from Sales.Employees;
+
+-- Retrieve customer details with abbreviated country code
+select 
+    CustomerID,
+    FirstName,
+    Country,
+CASE 
+    WHEN country = 'Germany' THEN 'DE'
+    WHEN Country = 'USA' THEN 'US'
+    ELSE 'NA'
+END countryabb1,
+CASE Country 
+    WHEN 'Germany' THEN 'DE'
+    WHEN 'USA' THEN 'US'
+    ELSE 'NA'
+END countryabb2
+from Sales.Customers;
+
+-- Find the average score of customers treating NULLs as 0, and also return CustomerID and LastName.
+SELECT
+    customerID,
+    lastName,
+    score,
+CASE WHEN score is null THEN 0
+    else score
+    END scoreclean,
+
+AVG(CASE 
+WHEN score is null THEN 0
+    else score
+    END ) OVER() avgcustomerclean,
+    AVG(Score) OVER() avgcustomer
+FROM Sales.Customers;
+
+-- Count how many times each customer has made an order with sales greater than 30.
+select 
+    CustomerID,
+SUM(CASE
+    WHEN sales > 30 THEN 1
+    ELSE 0
+END) TotalOrdersHighSales,
+COUNT(*) TotalOrders
+from Sales.Orders
+GROUP BY CustomerID;
