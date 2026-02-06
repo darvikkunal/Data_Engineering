@@ -748,3 +748,26 @@ END) TotalOrdersHighSales,
 COUNT(*) TotalOrders
 from Sales.Orders
 GROUP BY CustomerID;
+
+-- Aggregate Functions --
+-- Find the total number of orders , sum of sales , avg sales , highest sales , lowest sales
+select 
+    OrderID,
+    count(*) , 
+    sum(sales) as sales , 
+    avg(sales) as avg , 
+    max(Sales) as highest ,
+    min(sales) as lowest
+from Sales.Orders
+GROUP BY OrderID;
+
+-- Analyze the scores in customer table
+select 
+    CustomerID,
+    count(*) , 
+    sum(Score) as sales , 
+    avg(Score) as avg , 
+    max(Score) as highest ,
+    min(Score) as lowest
+from Sales.Customers
+GROUP BY CustomerID;
