@@ -257,3 +257,141 @@ select
     avg(Sales) over(partition by productid ORDER BY orderdate) movingavg,
     avg(sales) over(partition by productID order by orderdate ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING) as Rollingavg
 from Sales.Orders;
+
+
+---     RANK WINDOW FUNC        ---
+-- Rank(ROW_NUMBER),(Rank),(DENSE_RANK) the orders based on their sales from highest to lowest
+select
+    orderID,
+    sales,
+    ROW_NUMBER() OVER(ORDER BY sales DESC ) SalesRank_Row,
+    RANK() OVER(order BY sales DESC) SalesRank_Rank,
+    DENSE_RANK() OVER(order by sales DESC) SalesRank_DENSE
+FROM Sales.orders;
+
+-- Find the top highest sales for each product [TOP N ANALYSIS]
+select * 
+from (
+    SELECT
+        orderID,
+        ProductID,
+        sales,
+        ROW_NUMBER() OVER(PARTITION BY productID ORDER BY sales DESC) ROW_NOSales
+    FROM Sales.Orders) t
+where ROW_NOSales = 1;
+
+-- Find the lowest 2 customers based on their total sales
+select * from
+(
+    SELECT
+        CustomerID,
+        sum(sales) TotalSales,
+        ROW_NUMBER() over(order by sum(sales)) RankRowCustomers
+    from sales.orders
+    GROUP BY CustomerID
+)t
+where RankRowCustomers <=2;
+
+-- Assign unique IDs to the rows of the 'Orders Archive' table
+select
+    ROW_NUMBER() OVER(order by orderID, orderdate) UniqueID,
+    *
+FROM sales.OrdersArchive;
+
+-- Identify duplicate rows in the table 'Orders Archive' and return a clean result without any duplicates
+select * from 
+(    select
+        ROW_NUMBER() OVER(PARTITION BY orderID ORDER BY creationTime DESC) rn,
+        *
+    FROM Sales.OrdersArchive
+) T
+WHERE rn > 1;
+
+-- Ntile
+SELECT
+    orderID,
+    sales,
+    NTILE(1) OVER(ORDER BY sales DESC) ONEBUCKET,
+    NTILE(2) OVER(ORDER BY sales DESC) TWOBUCKET,
+    NTILE(3) OVER(ORDER BY sales DESC) THREEBUCKET,
+    NTILE(4) OVER(ORDER BY sales DESC) FOURBUCKET
+FROM sales.orders;
+
+--- Segment all orders into 3 categories : high , medium and low sales
+
+select orderID, sales, 
+CASE   
+    WHEN buckets = 1 THEN 'HIGH'
+    WHEN buckets = 2 THEN 'Medium'
+    Else 'low'
+END category
+from (
+select orderID, sales, NTILE(3) OVER(ORDER BY sales DESC) buckets
+from Sales.Orders) t
+
+-- Find the products that fall within the highest 40% of the prices
+select *,
+CONCAT(distRank * 100, '%') DistRankPerc 
+from (
+SELECT
+    PRODUCT,
+    price,
+    CUME_DIST() OVER(ORDER BY price desc) distRank
+    FROM sales.Products
+) t
+where distRank <=0.4;
+
+-- Analyze the month-over-month performance by finding the percentage change
+-- in sales between the current and previous month
+select *,
+    (currentsales - PreviousMonthSales)  as MOMChange,
+    ROUND(CAST((currentsales - PreviousMonthSales) As FLOAT)/PreviousMonthSales * 100,1)  as percentageChange
+from (
+    select
+        month(orderdate) OrderMonth,
+        sum(sales) currentsales,
+        lag(sum(sales)) over(order BY Month(orderdate)) PreviousMonthSales
+    FROM Sales.Orders
+    GROUP by Month(orderdate)
+) t1
+
+
+-- In order to analyze customer loyalty,
+-- rank customers based on the average days between their orders
+select
+customerID,
+avg(DaysUntilNextOrder) avgDays,
+rank() OVER(ORDER BY coalesce(avg(DaysUntilNextOrder),9999999999999)) rankavg
+from (    
+    select
+        OrderID,
+        CustomerID,
+        OrderDate currentOrder,
+        LEAD(OrderDate) OVER(PARTITION BY customerID ORDER BY orderdate) NextOrder,
+        DATEDIFF(day,orderdate,LEAD(OrderDate) OVER(PARTITION BY customerID ORDER BY orderdate)) DaysUntilNextOrder
+    from Sales.Orders
+) t1
+group by CustomerID;
+
+-- Find the lowest and Highest sales for each product
+SELECT
+    orderID,
+    PRODUCTID,
+    Sales,
+    FIRST_VALUE(sales) OVER (PARTITION BY productID ORDER BY sales) lowestsales,
+    LAST_VALUE(sales) OVER(PARTITION BY productID ORDER BY sales ROWS BETWEEN CURRENT ROW and UNBOUNDED FOLLOWING) highestsales,
+    FIRST_VALUE(sales) OVER(PARTITION BY productID order BY sales desc) highestsales1,
+    Min(sales) OVER (PARTITION BY productID) lowestsales1,
+    Max(sales) OVER (PARTITION BY productID) Highestsales2
+FROM Sales.Orders;
+
+-- Sales Difference
+
+SELECT
+    orderID,
+    PRODUCTID,
+    Sales,
+    FIRST_VALUE(sales) OVER (PARTITION BY productID ORDER BY sales) lowestsales,
+    LAST_VALUE(sales) OVER(PARTITION BY productID ORDER BY sales ROWS BETWEEN CURRENT ROW and UNBOUNDED FOLLOWING) highestsales,
+    Sales - FIRST_VALUE(sales) OVER (PARTITION BY productID ORDER BY sales) AS SalesDiff
+FROM Sales.Orders;
