@@ -673,3 +673,42 @@ where c.country != 'USA'
 );
 
 select * from sales.EU_sales_Team;
+
+
+--- CTA's   ---
+--Create table using CTA's for total number of orders for each month
+-- we will be using SQL server syntax
+-- TSQL
+IF OBJECT_ID('sales.Monthlyorders', 'U') IS NOT NULL
+    DROP TABLE sales.Monthlyorders;
+GO
+select
+    orderdate,
+    count(orderID) totalorders
+INTO sales.Monthlyorders
+FROM sales.orders
+GROUP by orderdate;
+
+select * from sales.Monthlyorders;
+DROP TABLE sales.Monthlyorders;
+
+
+--- Temp Tables ---
+Select *
+INTO #Orders
+FROM sales.Orders
+
+select * from #orders;
+
+DELETE from #orders
+where orderstatus = 'delivered';
+
+select *
+INTO sales.ordersTest
+from #orders;
+
+select * from sales.ordersTest;
+
+
+
+
