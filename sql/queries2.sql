@@ -395,3 +395,320 @@ SELECT
     LAST_VALUE(sales) OVER(PARTITION BY productID ORDER BY sales ROWS BETWEEN CURRENT ROW and UNBOUNDED FOLLOWING) highestsales,
     Sales - FIRST_VALUE(sales) OVER (PARTITION BY productID ORDER BY sales) AS SalesDiff
 FROM Sales.Orders;
+
+
+---     SUB QUERIES     ---
+-- Find the products that have a price higher than the average price of all products
+select 
+* from 
+(
+    select 
+        productid,
+        price,
+        avg(price) over() avgprice
+    from Sales.Products
+) ta
+where price > avgprice;
+
+-- Rank customers based on their total amount of sales
+select
+    *,
+    rank() over(order by totalsales desc) SalesRank
+from
+(
+    select 
+        customerID,
+        sum(sales) as totalSales
+    from sales.Orders
+    group by customerID
+) tr;
+
+-- Show the product IDs, product names, prices, and the total number of orders
+
+select 
+    productid,
+    product,
+    price,
+    (select count(*) from sales.orders) as TotalOrders
+from sales.Products
+group by     
+productid,
+    product,
+    price;
+
+-- show all customer details and find the total orders for each customers
+select c.*, o.totalorders
+from sales.Customers c left join 
+    (select CustomerID , count(*) totalorders from sales.orders group by CustomerID)
+     o on c.CustomerID=o.CustomerID
+
+-- Find the products that have a price higher than the average price of all products
+select *
+from sales.Products
+where price > (select avg(price) from sales.Products )
+
+-- Show the details of orders made by customers in Germany & USA
+select *
+from sales.Orders
+where customerID IN (
+select customerID
+from sales.Customers
+where Country IN ('Germany','USA'));
+
+-- Show the details of orders made by customers NOT in Germany
+select *
+from sales.Orders
+where customerID IN (
+select customerID
+from sales.Customers
+where Country NOT IN ('Germany'));
+
+-- Find female employees whose salaries are greater than the salaries of any male employees
+select 
+* 
+from sales.Employees
+where Gender = 'F'
+AND salary > ANY (SELECT salary FROM sales.Employees where Gender = 'M') ;
+
+-- Find female employees whose salaries are greater than the salaries of all male employees
+select *
+from sales.Employees
+where gender = 'F'
+AND salary > ALL (SELECT salary from sales.Employees where Gender = 'M');
+
+-- show all customer details and find the total orders of each customers
+select 
+    *,
+    (SELECT COUNT(*) FROM sales.orders o where o.CustomerID = c.CustomerID) Totalsales
+from sales.Customers c
+
+
+-- Show the details of orders made by customers in Germany
+
+select *
+from sales.Orders o
+where EXISTS ( select 1 FROM sales.customers c where country = 'Germany' AND o.CustomerID = c.CustomerID);
+
+
+
+---     CTE's   ---
+-- Step 1: Find the total sales per customer
+with CTE_TotalSales as (
+select
+    customerID,
+    sum(sales) as totalsales
+from sales.Orders
+GROUP BY CustomerID
+),
+-- Step2: Find the last order date for each customer
+CTE_lastorderdate as (
+select
+customerID,
+max(orderdate) latest_orderdate
+from sales.Orders
+group by customerID
+),
+-- Step3: Rank Customers based on total sales per customer (Nested CTE)
+CTE_RankSales as (
+select 
+    customerid,
+    RANK() OVER(order by totalsales desc) as salesrank
+from CTE_TotalSales
+),
+--Step4 : Segment customers based on their total sales (Nested CTE)
+CTE_Customer_segments AS (
+    select
+    customerID,
+    totalsales,
+    CASE 
+        WHEN totalsales > 100 THEN 'HIGH'
+        WHEN totalsales > 80 THEN 'MEDIUM'
+        ELSE 'LOW'
+    END customer_segment
+    FROM CTE_TotalSales
+)
+-- Main Query
+select
+c.customerid,
+c.FirstName,
+coalesce(ctt.totalsales,0) as totalsales,
+coalesce(latest_orderdate,null) as latestorderdate,
+coalesce(salesrank,0) as salesrank,
+customer_segment
+FROM sales.Customers c LEFT JOIN CTE_TotalSales ctt ON c.CustomerID = ctt.CustomerID
+LEFT JOIN CTE_lastorderdate ct1 on c.CustomerID = ct1.CustomerID
+LEFT JOIN CTE_RankSales crs on c.CustomerID = crs.customerid
+LEFT JOIN CTE_Customer_segments ccs on c.CustomerID = ccs.CustomerID
+order by salesrank desc;
+
+
+--- Resursive CTE's ---
+--Generate a sequence of Numbers from 1 to 20
+with series as (
+    -- Anchor Query
+    SELECT
+    1 AS MyNumber
+    UNION ALL
+    -- Recursive Query
+    SELECT
+    MyNumber + 1
+    FROM series
+    where MyNumber < 2000
+)
+-- Main Query
+SELECT *
+FROM SERIES
+OPTION (MAXRECURION 100000)
+
+
+-- Show the employee hierarchy by displaying each employees's level within the organization
+--Anchor Query
+WITH CTE_emp_hi as
+(
+    select
+        EmployeeID,
+        FirstName,
+        ManagerID,
+        1 as LEVEL
+    FROM sales.Employees
+    where ManagerID IS NULL
+    UNION ALL
+    -- Recursive Query
+    SELECT
+    e.employeeID,
+    e.FirstName,
+    e.managerID,
+    LEVEL + 1
+    FROM sales.Employees as e
+    INNER JOIN CTE_emp_hi  ceh
+    ON e.EmployeeID = ceh.EmployeeID
+)
+--Main Query
+SELECT * FROM CTE_emp_hi;
+
+--- VIEW's  ---
+-- Find the running total of sales for each month
+with cte_monthlysummary as (
+select
+    orderdate,
+    sum(sales) totalsales,
+    count(orderid) totalorders,
+    sum(quantity) totalquantitie
+from sales.orders
+group by orderdate
+)
+select
+orderdate,
+totalsales,
+sum(totalsales) over(order by orderdate) as runningtotal
+from cte_monthlysummary;
+
+-- Create a view
+create view sales.V_monthly_summary as 
+(
+    select
+    orderdate,
+    sum(sales) totalsales,
+    count(orderid) totalorders,
+    sum(quantity) totalquantitie
+from sales.orders
+group by orderdate
+);
+
+select * from sales.V_monthly_summary;
+
+select
+orderdate,
+totalsales,
+sum(totalsales) over(order by orderdate) as runningtotal
+from sales.V_monthly_summary;
+
+drop view sales.V_monthly_summary;
+
+-- Provide view that combines details from orders, products, customers, and employees
+CREATE VIEW sales.v_order_details as (
+select
+o.orderid,
+o.orderDate,
+p.product,
+p.category,
+coalesce(c.firstname,'')+' '+ coalesce(c.lastname,'') customername,
+c.country customercountry,
+coalesce(e.firstname,'')+' '+ coalesce(e.lastname,'') salesname,
+e.department,
+o.quantity
+from sales.orders o
+left join sales.products p
+on p.ProductID = o.ProductID
+left join sales.Customers c
+on c.CustomerID = o.CustomerID
+left join sales.Employees e
+on e.EmployeeID = o.SalesPersonID
+);
+
+select * from sales.v_order_details;
+
+-- Provide a view for EU sales Team
+-- that combines details from all tables
+-- And excludes data related to the USA
+CREATE VIEW sales.EU_sales_Team as (
+select
+o.orderid,
+o.orderDate,
+p.product,
+p.category,
+coalesce(c.firstname,'')+' '+ coalesce(c.lastname,'') customername,
+c.country customercountry,
+coalesce(e.firstname,'')+' '+ coalesce(e.lastname,'') salesname,
+e.department,
+o.quantity
+from sales.orders o
+left join sales.products p
+on p.ProductID = o.ProductID
+left join sales.Customers c
+on c.CustomerID = o.CustomerID
+left join sales.Employees e
+on e.EmployeeID = o.SalesPersonID
+where c.country != 'USA'
+);
+
+select * from sales.EU_sales_Team;
+
+
+--- CTA's   ---
+--Create table using CTA's for total number of orders for each month
+-- we will be using SQL server syntax
+-- TSQL
+IF OBJECT_ID('sales.Monthlyorders', 'U') IS NOT NULL
+    DROP TABLE sales.Monthlyorders;
+GO
+select
+    orderdate,
+    count(orderID) totalorders
+INTO sales.Monthlyorders
+FROM sales.orders
+GROUP by orderdate;
+
+select * from sales.Monthlyorders;
+DROP TABLE sales.Monthlyorders;
+
+
+--- Temp Tables ---
+Select *
+INTO #Orders
+FROM sales.Orders
+
+select * from #orders;
+
+DELETE from #orders
+where orderstatus = 'delivered';
+
+select *
+INTO sales.ordersTest
+from #orders;
+
+select * from sales.ordersTest;
+
+
+
+
