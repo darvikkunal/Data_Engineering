@@ -6,3 +6,4 @@ sql/__pycache__.DS_Store
 .DS_Store
 aws-glue-libs
 RUNNING_SPARK.md
+sql_dwh_project_resources
