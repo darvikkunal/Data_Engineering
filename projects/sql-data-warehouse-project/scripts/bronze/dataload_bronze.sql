@@ -21,12 +21,12 @@ TRUNCATE TABLE bronze.erp_px_cat_g1v2;
 \copy bronze.erp_px_cat_g1v2 FROM '/Users/darvikkunalbanda/Data_Engineering/sql_dwh_project/sql-data-warehouse-project/datasets/source_erp/PX_CAT_G1V2.csv' WITH (FORMAT csv, HEADER true);
 
 -- Testing the tables
-select * from bronze.crm_cust_info;
-select * from bronze.crm_prd_info;
-select * from bronze.crm_sales_details;
-select * from bronze.erp_loc_a101;
-select * from bronze.erp_cust_az12;
-select * from bronze.erp_px_cat_g1v2;
+select * from bronze.crm_cust_info limit 5;
+select * from bronze.crm_prd_info limit 5;
+select * from bronze.crm_sales_details limit 5;
+select * from bronze.erp_loc_a101 limit 5;
+select * from bronze.erp_cust_az12 limit 5;
+select * from bronze.erp_px_cat_g1v2 limit 5;
 
 
 SELECT COUNT(*) FROM bronze.crm_cust_info;
