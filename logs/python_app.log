@@ -1,0 +1,24 @@
+App Started
+
+Processed Email: {'username': 'jio', 'domain': 'hi.com'}
+
+App Stopped
+
+App Started
+
+Processed Email: {'username': 'hi', 'domain': 'io.com'}
+
+App Stopped
+
+App Started
+
+Invalid Email recieved : kllk.com
+
+App Stopped
+
+App Started
+
+Invalid Email recieved : haudh.com
+
+App Stopped
+
