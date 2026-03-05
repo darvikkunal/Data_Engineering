@@ -57,4 +57,38 @@ FROM
 
 -- Performance Analysis
 -- Analyze the yearly performance of products by comparing each product's sales to both its average sales performance and the previous year's sales.
+with yearly_product_sales AS (
+    SELECT
+    EXTRACT(YEAR FROM f.order_date)::INT as order_year,
+    p.product_name,
+    SUM(f.sales_amount) as current_sales
+    from gold.fact_sales f
+    LEFT JOIN gold.dim_products p
+    ON f.product_key = p.product_key
+    WHERE f.ORDER_date is not null
+    GROUP BY 1,2
+)
 
+select
+    order_year,
+    product_name,
+    current_sales,
+    avg(current_sales) over (partition by product_name) as avg_sales,
+    current_sales - avg(current_sales) over(partition by product_name) as diff_avg,
+
+    case
+    when current_sales - avg(current_sales) OVER (PARTITION BY product_name) > 0
+        THEN 'Above Avg'
+    when current_sales - avg(current_sales) OVER (PARTITION BY product_name) < 0
+        THEN 'Below Avg'
+    ELSE 'Avg'
+    END AS avg_change,
+    LAG(current_sales) OVER(PARTITION BY product_name ORDER BY order_year) AS py_sales,
+
+    current_sales - LAG(current_sales) OVER(PARTITION BY product_name ORDER BY order_year) AS diff_py,
+    CASE WHEN current_sales - LAG(current_sales) OVER(PARTITION BY product_name ORDER BY order_year) > 0 THEN 'Increase'
+        WHEN current_sales - LAG(current_sales) OVER(PARTITION BY product_name ORDER BY order_year) < 0 THEN 'Decrease'
+        ELSE 'No Change'
+    END AS py_change
+FROM yearly_product_sales
+ORDER BY 2,1
