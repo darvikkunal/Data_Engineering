@@ -101,3 +101,61 @@ select
         ELSE sls_price
     END AS sls_price
 from bronze.crm_sales_details;
+
+-----------------------------
+-- For erp_cust_az12
+-----------------------------
+INSERT INTO silver.erp_cust_az12 (
+    cid,
+    bdate,
+    gen
+)
+    select 
+        case 
+            when cid like 'NAS%' THEN SUBSTRING(cid FROM 4)
+            else cid
+        end as cid,
+        CASE
+            when bdate > current_date THEN NULL
+            else bdate
+        end as bdate,
+        case when UPPER(TRIM(gen)) IN ('F','FEMALE') THEN 'Female'
+            when UPPER(TRIM(gen)) IN ('M','MALE') THEN 'Male'
+            else 'n/a'
+        end as gen
+    from bronze.erp_cust_az12;
+
+-----------------------------
+-- For erp_loc_a101
+-----------------------------
+INSERT INTO silver.erp_loc_a101 (
+    cid,
+    cntry
+)
+    select
+        replace(cid,'-','') as cid,
+        CASE 
+            WHEN TRIM(cntry) = 'DE' THEN 'Germany'
+            WHEN TRIM(cntry) IN ('US','USA') THEN 'United States'
+            WHEN TRIM(cntry) = '' OR cntry IS NULL THEN 'n/a'
+            ELSE TRIM(cntry)
+        END cntry
+    from bronze.erp_loc_a101
+    
+
+-----------------------------
+-- For erp_px_cat_g1v2
+-----------------------------
+
+INSERT INTO silver.erp_px_cat_g1v2 (
+    id,
+    cat,
+    subcat,
+    maintenance
+)
+    SELECT
+    id,
+    cat,
+    subcat,
+    maintenance
+    FROM bronze.erp_px_cat_g1v2;

@@ -81,3 +81,25 @@ from bronze.crm_sales_details
 where sls_order_dt <= 0
 
 select * from silver.crm_sales_details;
+
+-----------------------------
+-- For erp_cust_az12
+-----------------------------
+select bdate from silver.erp_cust_az12
+where bdate > current_date;
+
+select distinct gen from silver.erp_cust_az12;
+
+select * from silver.erp_cust_az12;
+
+-----------------------------
+-- For erp_loc_a101
+-----------------------------
+
+select * 
+from silver.erp_loc_a101;
+
+select distinct cntry
+from silver.erp_loc_a101;
+
+select * from silver.erp_px_cat_g1v2;

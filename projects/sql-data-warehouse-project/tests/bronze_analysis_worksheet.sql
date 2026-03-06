@@ -123,3 +123,83 @@ SELECT DISTINCT
 from bronze.crm_sales_details
 where sls_sales IS NULL or sls_quantity IS NULL or sls_price IS NULL
     or sls_sales < 0 OR sls_quantity < 0 OR sls_price < 0;
+
+-----------------------------
+-- For erp_cust_az12
+-- we are joining erp_cust_az12 with crm_cust_info
+-----------------------------
+select * from bronze.crm_cust_info limit 5;
+
+select * from bronze.erp_cust_az12 limit 5;
+
+select
+    cid,
+    case 
+        when cid like 'NAS%' THEN SUBSTRING(cid FROM 4)
+        else cid
+    end cid,
+    bdate,
+    gen
+from bronze.erp_cust_az12
+where     case 
+        when cid like 'NAS%' THEN SUBSTRING(cid FROM 4)
+        else cid
+    END NOT IN (select DISTINCT cst_key FROM silver.crm_cust_info)
+
+select bdate from bronze.erp_cust_az12 
+where bdate > current_date;
+
+select distinct gen 
+from bronze.erp_cust_az12;
+
+select distinct gen,
+case when UPPER(TRIM(gen)) IN ('F','FEMALE') THEN 'Female'
+    when UPPER(TRIM(gen)) IN ('M','MALE') THEN 'Male'
+    else 'n/a'
+end gender
+from bronze.erp_cust_az12;
+
+-----------------------------
+-- For erp_loc_a101
+-----------------------------
+
+select * , length(cst_key) from silver.crm_cust_info limit 5;
+
+select * , length(cid) from bronze.erp_loc_a101 limit 5;
+
+select cid,
+    replace(cid,'-','') as new,
+    length(replace(cid,'-',''))
+from bronze.erp_loc_a101
+where replace(cid,'-','') NOT IN
+(SELECT cst_key FROM silver.crm_cust_info);
+
+select distinct cntry
+from bronze.erp_loc_a101;
+
+-----------------------------
+-- For erp_px_cat_g1v2
+-----------------------------
+select * from silver.crm_prd_info limit 5;
+
+select *
+from bronze.erp_px_cat_g1v2 limit 5;
+
+-- check for unwanted spaces
+SELECT * FROM bronze.erp_px_cat_g1v2
+where cat != TRIM(cat) OR subcat !=(subcat)
+OR maintenance != TRIM(maintenance);
+
+-- Data Standardization & Consistency
+SELECT DISTINCT
+cat 
+FROM bronze.erp_px_cat_g1v2;
+
+SELECT DISTINCT
+subcat
+FROM bronze.erp_px_cat_g1v2;
+
+SELECT DISTINCT
+maintenance
+FROM bronze.erp_px_cat_g1v2;
+
