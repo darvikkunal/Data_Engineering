@@ -104,7 +104,8 @@ Highlights:
 -----
 -- BASE QUERY
 -----
-with base_query as (
+CREATE VIEW gold.report_customers AS
+with base_query as ( 
 select
     f. order_number,
     f. product_key,
@@ -120,7 +121,8 @@ LEFT JOIN gold.dim_customers c
 ON f.customer_key = c.customer_key
 where f.order_date IS NOT NULL
 ),
-
+--customer aggregations: Summarizes key metrics at the customer level
+customer_aggregation as (
 select
     customer_key,
     customer_number,
@@ -132,4 +134,145 @@ select
     MAX(order_date) AS last_order_date,
     DATE_PART('month', AGE(MAX(order_date), MIN(order_date))) AS lifespan
 FROM base_query
-GROUP BY 1,2,3,4;
+GROUP BY 1,2,3,4
+)
+
+SELECT
+    customer_key, 
+    customer_number, 
+    customer_name, 
+    age, 
+CASE
+    WHEN age < 20 THEN 'Under 20'
+    WHEN age between 20 and 29 THEN '20-29'
+    WHEN age between 30 and 39 THEN '30-39'
+    WHEN age between 40 and 49 THEN '40-49'
+    ELSE '50 and above'
+    END AS age_group,
+CASE
+    WHEN lifespan >= 12 AND total_sales > 5000 THEN 'VIP' 
+    WHEN lifespan >= 12 AND total_sales <= 5000 THEN 'Regular'
+    ELSE 'New'
+    END AS customer_segment,
+    last_order_date,
+    DATE_PART('year', AGE(CURRENT_DATE, last_order_date)) * 12 +
+    DATE_PART('month', AGE(CURRENT_DATE, last_order_date)) AS recency,
+    total_orders,
+    total_sales, 
+    total_quantity, 
+    total_products,
+    lifespan,
+    -- compute average order value (AVO)
+    CASE WHEN total_sales = 0 THEN 0
+        ELSE total_sales / total_orders
+    END AS avg_order_value,
+    -- compute average monthly spend
+    CASE WHEN lifespan = 0 THEN total_sales
+    ELSE total_sales / lifespan
+    END AS avg_monthly_spend
+FROM customer_aggregation;
+
+
+
+SELECT * from gold.report_customers;
+
+
+/*
+Product Report
+===========
+Purpose:
+- This report consolidates key product metrics and behaviors.
+Highlights:
+1. Gathers essential fields such as product name, category, subcategory, and cost.
+2. Segments products by revenue to identify High-Performers, Mid-Range, or Low-Performers.
+3. Aggregates product-level metrics:
+- total orders
+- total sales
+- total quantity sold
+- total customers (unique)
+- lifespan (in months)
+4. Calculates valuable KPIs:
+- recency (months since last sale)
+- average order revenue (AOR)
+- average monthly revenue
+*/
+
+CREATE VIEW gold.report_products AS
+WITH base_query AS (
+    SELECT
+        f.order_number,
+        f.order_date,
+        f.customer_key,
+        f.sales_amount,
+        f.quantity,
+        p.product_key,
+        p.product_name,
+        p.category,
+        p.subcategory,
+        p.cost
+    FROM gold.fact_sales f
+    LEFT JOIN gold.dim_products p
+        ON f.product_key = p.product_key
+    WHERE order_date IS NOT NULL
+),
+
+product_aggregation AS (
+    SELECT
+        product_key,
+        product_name,
+        category,
+        subcategory,
+        cost,
+
+        EXTRACT(YEAR FROM AGE(MAX(order_date), MIN(order_date))) * 12 +
+        EXTRACT(MONTH FROM AGE(MAX(order_date), MIN(order_date))) AS lifespan,
+
+        MAX(order_date) AS last_sale_date,
+        COUNT(DISTINCT order_number) AS total_orders,
+        COUNT(DISTINCT customer_key) AS total_customers,
+        SUM(sales_amount) AS total_sales,
+        SUM(quantity) AS total_quantity,
+
+        ROUND(AVG(sales_amount / NULLIF(quantity,0)),1) AS avg_selling_price
+
+    FROM base_query
+    GROUP BY 1,2,3,4,5
+)
+
+SELECT
+    product_key,
+    product_name,
+    category,
+    subcategory,
+    cost,
+    last_sale_date,
+
+    EXTRACT(YEAR FROM AGE(CURRENT_DATE, last_sale_date)) * 12 +
+    EXTRACT(MONTH FROM AGE(CURRENT_DATE, last_sale_date)) AS recency_in_months,
+
+    CASE
+        WHEN total_sales > 50000 THEN 'High-Performer'
+        WHEN total_sales >= 10000 THEN 'Mid-Range'
+        ELSE 'Low-Performer'
+    END AS product_segment,
+
+    lifespan,
+    total_orders,
+    total_sales,
+    total_quantity,
+    total_customers,
+    avg_selling_price,
+
+    CASE
+        WHEN total_orders = 0 THEN 0
+        ELSE total_sales / total_orders
+    END AS avg_order_revenue,
+
+    CASE
+        WHEN lifespan = 0 THEN total_sales
+        ELSE total_sales / lifespan
+    END AS avg_monthly_revenue
+
+FROM product_aggregation;
+
+select * from gold.report_products;
