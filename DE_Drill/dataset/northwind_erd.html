@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Northwind Database — ERD</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --border: #1e2330;
+    --accent: #00e5ff;
+    --accent2: #ff6b6b;
+    --accent3: #a8ff78;
+    --accent4: #ffd166;
+    --accent5: #c77dff;
+    --accent6: #ff9a3c;
+    --text: #e8eaf0;
+    --muted: #5a6078;
+    --pk: #ffd166;
+    --fk: #00e5ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header {
+    position: relative;
+    z-index: 10;
+    padding: 40px 48px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .header-left h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .header-left h1 span { color: var(--accent); }
+
+  .header-left p {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+
+  .controls {
+    position: relative;
+    z-index: 10;
+    padding: 16px 48px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: rgba(19,22,30,0.8);
+    backdrop-filter: blur(10px);
+  }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,0.05);
+  }
+
+  .canvas-wrapper {
+    position: relative;
+    z-index: 1;
+    padding: 40px 48px;
+    overflow-x: auto;
+  }
+
+  .erd-canvas {
+    position: relative;
+    width: 1600px;
+    min-height: 900px;
+  }
+
+  svg.connections {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .table-card {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    width: 220px;
+    z-index: 2;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .table-card:hover, .table-card.highlighted {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 8px 32px rgba(0,229,255,0.15);
+    z-index: 10;
+  }
+
+  .table-card.dimmed {
+    opacity: 0.2;
+  }
+
+  .table-header {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-icon {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .table-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text);
+  }
+
+  .table-row-count {
+    margin-left: auto;
+    font-size: 9px;
+    color: var(--muted);
+    background: rgba(255,255,255,0.04);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .table-desc {
+    padding: 6px 14px 8px;
+    font-size: 9px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+  }
+
+  .col-list {
+    padding: 6px 0;
+  }
+
+  .col-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 14px;
+    font-size: 10px;
+    transition: background 0.15s;
+  }
+
+  .col-row:hover { background: rgba(255,255,255,0.03); }
+
+  .col-badge {
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    width: 22px;
+    text-align: center;
+  }
+
+  .badge-pk { background: rgba(255,209,102,0.15); color: var(--pk); }
+  .badge-fk { background: rgba(0,229,255,0.1); color: var(--fk); }
+  .badge-empty { width: 22px; }
+
+  .col-name { color: var(--text); flex: 1; }
+  .col-type { color: var(--muted); font-size: 9px; margin-left: auto; }
+
+  .col-more {
+    padding: 4px 14px 8px;
+    font-size: 9px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .col-more:hover { color: var(--accent); }
+
+  /* Relationship lines */
+  .conn-line {
+    fill: none;
+    stroke-width: 1.5;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+  }
+  .conn-line.active { opacity: 1; stroke-width: 2; }
+
+  /* Info panel */
+  .info-panel {
+    position: fixed;
+    bottom: 32px;
+    right: 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    width: 280px;
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.25s ease;
+    pointer-events: none;
+  }
+
+  .info-panel.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+
+  .info-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .info-rel {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .info-rel span { color: var(--text); }
+
+  .close-info {
+    position: absolute;
+    top: 12px; right: 14px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .close-info:hover { color: var(--text); }
+
+  .stats-bar {
+    position: relative;
+    z-index: 10;
+    padding: 12px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>NORTHWIND <span>DATABASE</span> — Entity Relationship Diagram</h1>
+    <p>NORTHWIND TRADERS · SALES & ERP SCHEMA · 8 CORE TABLES · CLICK ANY TABLE TO EXPLORE RELATIONSHIPS</p>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--pk)"></div> PRIMARY KEY</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--fk)"></div> FOREIGN KEY</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div> CORE TABLE</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent5)"></div> LOOKUP TABLE</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="filter-btn active" onclick="filterGroup('all', this)">ALL TABLES</button>
+  <button class="filter-btn" onclick="filterGroup('orders', this)">ORDER FLOW</button>
+  <button class="filter-btn" onclick="filterGroup('products', this)">PRODUCTS</button>
+  <button class="filter-btn" onclick="filterGroup('people', this)">PEOPLE</button>
+  <button class="filter-btn" onclick="filterGroup('geo', this)">GEOGRAPHY</button>
+</div>
+
+<div class="canvas-wrapper">
+  <div class="erd-canvas" id="canvas">
+    <svg class="connections" id="svg-connections"></svg>
+
+    <!-- ORDERS TABLE -->
+    <div class="table-card" id="tbl-orders" style="left:580px;top:320px" data-group="orders" onclick="highlightTable('orders')">
+      <div class="table-header">
+        <div class="table-icon" style="background:var(--accent3)"></div>
+        <span class="table-name">ORDERS</span>
+        <span class="table-row-count">830 rows</span>
+      </div>
+      <div class="table-desc">Customer orders placed with Northwind Traders. Central fact table linking customers, employees & shippers.</div>
+      <div class="col-list">
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">OrderID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-fk">FK</span><span class="col-name">CustomerID</span><span class="col-type">CHAR(5)</span></div>
+        <div class="col-row"><span class="col-badge badge-fk">FK</span><span class="col-name">EmployeeID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-fk">FK</span><span class="col-name">ShipVia</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">OrderDate</span><span class="col-type">DATE</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">RequiredDate</span><span class="col-type">DATE</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">ShippedDate</span><span class="col-type">DATE</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Freight</span><span class="col-type">DECIMAL</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">ShipName</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">ShipCountry</span><span class="col-type">VARCHAR</span></div>
+      </div>
+    </div>
+
+    <!-- ORDER_DETAILS TABLE -->
+    <div class="table-card" id="tbl-order_details" style="left:870px;top:320px" data-group="orders" onclick="highlightTable('order_details')">
+      <div class="table-header">
+        <div class="table-icon" style="background:var(--accent3)"></div>
+        <span class="table-name">ORDER_DETAILS</span>
+        <span class="table-row-count">2155 rows</span>
+      </div>
+      <div class="table-desc">Line items for each order. Links orders to products with quantity and price. Composite PK.</div>
+      <div class="col-list">
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">OrderID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">ProductID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-fk">FK</span><span class="col-name">→ Orders</span><span class="col-type"></span></div>
+        <div class="col-row"><span class="col-badge badge-fk">FK</span><span class="col-name">→ Products</span><span class="col-type"></span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">UnitPrice</span><span class="col-type">DECIMAL</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Quantity</span><span class="col-type">SMALLINT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Discount</span><span class="col-type">FLOAT</span></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS TABLE -->
+    <div class="table-card" id="tbl-products" style="left:1160px;top:200px" data-group="products" onclick="highlightTable('products')">
+      <div class="table-header">
+        <div class="table-icon" style="background:var(--accent3)"></div>
+        <span class="table-name">PRODUCTS</span>
+        <span class="table-row-count">77 rows</span>
+      </div>
+      <div class="table-desc">Product catalog with pricing, stock, and supplier/category reference.</div>
+      <div class="col-list">
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">ProductID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-fk">FK</span><span class="col-name">SupplierID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-fk">FK</span><span class="col-name">CategoryID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">ProductName</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">UnitPrice</span><span class="col-type">DECIMAL</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">UnitsInStock</span><span class="col-type">SMALLINT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">UnitsOnOrder</span><span class="col-type">SMALLINT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Discontinued</span><span class="col-type">BIT</span></div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES TABLE -->
+    <div class="table-card" id="tbl-categories" style="left:1390px;top:60px" data-group="products" onclick="highlightTable('categories')">
+      <div class="table-header">
+        <div class="table-icon" style="background:var(--accent5)"></div>
+        <span class="table-name">CATEGORIES</span>
+        <span class="table-row-count">8 rows</span>
+      </div>
+      <div class="table-desc">Product category lookup. Beverages, Condiments, Dairy, Meat, etc.</div>
+      <div class="col-list">
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">CategoryID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">CategoryName</span><span class="col-type">VARCHAR(15)</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Description</span><span class="col-type">TEXT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Picture</span><span class="col-type">BLOB</span></div>
+      </div>
+    </div>
+
+    <!-- SUPPLIERS TABLE -->
+    <div class="table-card" id="tbl-suppliers" style="left:1390px;top:320px" data-group="products" onclick="highlightTable('suppliers')">
+      <div class="table-header">
+        <div class="table-icon" style="background:var(--accent5)"></div>
+        <span class="table-name">SUPPLIERS</span>
+        <span class="table-row-count">29 rows</span>
+      </div>
+      <div class="table-desc">Vendors who supply products to Northwind. Contact info and location.</div>
+      <div class="col-list">
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">SupplierID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">CompanyName</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">ContactName</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Country</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Phone</span><span class="col-type">VARCHAR</span></div>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS TABLE -->
+    <div class="table-card" id="tbl-customers" style="left:280px;top:180px" data-group="people" onclick="highlightTable('customers')">
+      <div class="table-header">
+        <div class="table-icon" style="background:var(--accent3)"></div>
+        <span class="table-name">CUSTOMERS</span>
+        <span class="table-row-count">91 rows</span>
+      </div>
+      <div class="table-desc">Companies/individuals who purchase from Northwind. Global customers across 21 countries.</div>
+      <div class="col-list">
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">CustomerID</span><span class="col-type">CHAR(5)</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">CompanyName</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">ContactName</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">ContactTitle</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">City</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Country</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Phone</span><span class="col-type">VARCHAR</span></div>
+      </div>
+    </div>
+
+    <!-- EMPLOYEES TABLE -->
+    <div class="table-card" id="tbl-employees" style="left:280px;top:490px" data-group="people" onclick="highlightTable('employees')">
+      <div class="table-header">
+        <div class="table-icon" style="background:var(--accent3)"></div>
+        <span class="table-name">EMPLOYEES</span>
+        <span class="table-row-count">9 rows</span>
+      </div>
+      <div class="table-desc">Sales staff. Self-referencing via ReportsTo (manager hierarchy). Linked to territories.</div>
+      <div class="col-list">
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">EmployeeID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-fk">FK</span><span class="col-name">ReportsTo</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">LastName</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">FirstName</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Title</span><span class="col-type">VARCHAR</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">BirthDate</span><span class="col-type">DATE</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">HireDate</span><span class="col-type">DATE</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Country</span><span class="col-type">VARCHAR</span></div>
+      </div>
+    </div>
+
+    <!-- SHIPPERS TABLE -->
+    <div class="table-card" id="tbl-shippers" style="left:580px;top:620px" data-group="orders" onclick="highlightTable('shippers')">
+      <div class="table-header">
+        <div class="table-icon" style="background:var(--accent5)"></div>
+        <span class="table-name">SHIPPERS</span>
+        <span class="table-row-count">3 rows</span>
+      </div>
+      <div class="table-desc">Shipping companies used to deliver orders. Speedy Express, United Package, Federal Shipping.</div>
+      <div class="col-list">
+        <div class="col-row"><span class="col-badge badge-pk">PK</span><span class="col-name">ShipperID</span><span class="col-type">INT</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">CompanyName</span><span class="col-type">VARCHAR(40)</span></div>
+        <div class="col-row"><span class="col-badge badge-empty"></span><span class="col-name">Phone</span><span class="col-type">VARCHAR(24)</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><span class="stat-val">8</span><span class="stat-label">Core Tables</span></div>
+  <div class="stat"><span class="stat-val">11</span><span class="stat-label">Relationships</span></div>
+  <div class="stat"><span class="stat-val">3,202</span><span class="stat-label">Total Rows</span></div>
+  <div class="stat"><span class="stat-val">60+</span><span class="stat-label">Columns</span></div>
+  <div class="stat" style="margin-left:auto;display:flex;flex-direction:row;align-items:center;gap:8px;font-size:10px;color:var(--muted)">
+    <span>💡 TIP: Click a table to highlight its relationships</span>
+  </div>
+</div>
+
+<!-- Info Panel -->
+<div class="info-panel" id="info-panel">
+  <span class="close-info" onclick="closeInfo()">✕</span>
+  <div class="info-title" id="info-title">—</div>
+  <div class="info-rel" id="info-rel">—</div>
+</div>
+
+<script>
+const relationships = [
+  { from: 'tbl-orders', to: 'tbl-customers',     color: '#a8ff78', label: 'Orders.CustomerID → Customers.CustomerID',     fromSide: 'left',  toSide: 'right' },
+  { from: 'tbl-orders', to: 'tbl-employees',     color: '#c77dff', label: 'Orders.EmployeeID → Employees.EmployeeID',     fromSide: 'left',  toSide: 'right' },
+  { from: 'tbl-orders', to: 'tbl-shippers',      color: '#ff9a3c', label: 'Orders.ShipVia → Shippers.ShipperID',          fromSide: 'bottom',toSide: 'top'  },
+  { from: 'tbl-orders', to: 'tbl-order_details', color: '#00e5ff', label: 'OrderDetails.OrderID → Orders.OrderID',        fromSide: 'right', toSide: 'left' },
+  { from: 'tbl-order_details', to: 'tbl-products',  color: '#ffd166', label: 'OrderDetails.ProductID → Products.ProductID', fromSide: 'right', toSide: 'left' },
+  { from: 'tbl-products', to: 'tbl-categories',  color: '#ff6b6b', label: 'Products.CategoryID → Categories.CategoryID', fromSide: 'top',   toSide: 'bottom'},
+  { from: 'tbl-products', to: 'tbl-suppliers',   color: '#ff9a3c', label: 'Products.SupplierID → Suppliers.SupplierID',  fromSide: 'right', toSide: 'left' },
+  { from: 'tbl-employees', to: 'tbl-employees',  color: '#c77dff', label: 'Employees.ReportsTo → Employees.EmployeeID (Self-join — manager hierarchy)', fromSide: 'bottom', toSide: 'bottom' },
+];
+
+const tableInfo = {
+  'orders':       { title: 'ORDERS', rels: ['→ CUSTOMERS (Many-to-One: one customer, many orders)', '→ EMPLOYEES (Many-to-One: one employee handles many orders)', '→ SHIPPERS (Many-to-One: one shipper for many orders)', '← ORDER_DETAILS (One-to-Many: one order has many line items)'] },
+  'order_details':{ title: 'ORDER_DETAILS', rels: ['→ ORDERS (Many-to-One: bridge/fact table)', '→ PRODUCTS (Many-to-One: each line item is one product)', 'Composite PK: OrderID + ProductID'] },
+  'products':     { title: 'PRODUCTS', rels: ['→ CATEGORIES (Many-to-One: product belongs to one category)', '→ SUPPLIERS (Many-to-One: product sourced from one supplier)', '← ORDER_DETAILS (One-to-Many: product appears in many orders)'] },
+  'categories':   { title: 'CATEGORIES', rels: ['← PRODUCTS (One-to-Many: one category has many products)', '8 categories: Beverages, Condiments, Confections, Dairy, Grains, Meat, Produce, Seafood'] },
+  'suppliers':    { title: 'SUPPLIERS', rels: ['← PRODUCTS (One-to-Many: one supplier provides many products)', '29 suppliers from 16 countries'] },
+  'customers':    { title: 'CUSTOMERS', rels: ['← ORDERS (One-to-Many: one customer can place many orders)', '91 customers across 21 countries'] },
+  'employees':    { title: 'EMPLOYEES', rels: ['← ORDERS (One-to-Many: one employee handles many orders)', '→ EMPLOYEES (Self-join: ReportsTo = manager hierarchy)', '9 employees total'] },
+  'shippers':     { title: 'SHIPPERS', rels: ['← ORDERS (One-to-Many: one shipper handles many orders)', '3 shippers: Speedy Express, United Package, Federal Shipping'] },
+};
+
+function getAnchorPoint(el, side) {
+  const canvas = document.getElementById('canvas');
+  const canvasRect = canvas.getBoundingClientRect();
+  const rect = el.getBoundingClientRect();
+  const offsetX = rect.left - canvasRect.left + canvas.scrollLeft;
+  const offsetY = rect.top - canvasRect.top;
+
+  switch(side) {
+    case 'left':   return { x: offsetX,               y: offsetY + rect.height / 2 };
+    case 'right':  return { x: offsetX + rect.width,  y: offsetY + rect.height / 2 };
+    case 'top':    return { x: offsetX + rect.width/2, y: offsetY };
+    case 'bottom': return { x: offsetX + rect.width/2, y: offsetY + rect.height };
+  }
+}
+
+function drawConnections(activeTable = null) {
+  const svg = document.getElementById('svg-connections');
+  svg.innerHTML = '';
+
+  // Update canvas height
+  const canvas = document.getElementById('canvas');
+  const cards = canvas.querySelectorAll('.table-card');
+  let maxBottom = 900;
+  cards.forEach(c => {
+    const bottom = parseInt(c.style.top) + c.offsetHeight;
+    if (bottom > maxBottom) maxBottom = bottom;
+  });
+  canvas.style.minHeight = (maxBottom + 60) + 'px';
+  svg.setAttribute('height', maxBottom + 60);
+
+  relationships.forEach((rel, i) => {
+    const fromEl = document.getElementById(rel.from);
+    const toEl = document.getElementById(rel.to);
+    if (!fromEl || !toEl) return;
+
+    const isSelf = rel.from === rel.to;
+    let path;
+
+    if (isSelf) {
+      const p = getAnchorPoint(fromEl, 'bottom');
+      path = `M ${p.x} ${p.y} C ${p.x - 60} ${p.y + 50} ${p.x + 60} ${p.y + 50} ${p.x} ${p.y}`;
+    } else {
+      const from = getAnchorPoint(fromEl, rel.fromSide);
+      const to   = getAnchorPoint(toEl,   rel.toSide);
+      const dx = Math.abs(to.x - from.x) * 0.5;
+      const dy = Math.abs(to.y - from.y) * 0.5;
+
+      if (rel.fromSide === 'right' || rel.fromSide === 'left') {
+        path = `M ${from.x} ${from.y} C ${from.x + (rel.fromSide==='right'?dx:-dx)} ${from.y} ${to.x + (rel.toSide==='right'?dx:-dx)} ${to.y} ${to.x} ${to.y}`;
+      } else {
+        path = `M ${from.x} ${from.y} C ${from.x} ${from.y + (rel.fromSide==='bottom'?dy:-dy)} ${to.x} ${to.y + (rel.toSide==='bottom'?dy:-dy)} ${to.x} ${to.y}`;
+      }
+    }
+
+    const isActive = !activeTable ||
+      rel.from === 'tbl-' + activeTable ||
+      rel.to === 'tbl-' + activeTable;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    line.setAttribute('d', path);
+    line.setAttribute('class', 'conn-line' + (isActive ? ' active' : ''));
+    line.setAttribute('stroke', rel.color);
+    line.setAttribute('stroke-dasharray', isSelf ? '4 3' : 'none');
+    svg.appendChild(line);
+
+    // Arrow marker
+    if (!isSelf) {
+      const to = getAnchorPoint(toEl, rel.toSide);
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      arrow.setAttribute('cx', to.x);
+      arrow.setAttribute('cy', to.y);
+      arrow.setAttribute('r', 3);
+      arrow.setAttribute('fill', rel.color);
+      arrow.setAttribute('opacity', isActive ? '1' : '0.3');
+      svg.appendChild(arrow);
+    }
+  });
+}
+
+let activeTable = null;
+
+function highlightTable(name) {
+  if (activeTable === name) {
+    activeTable = null;
+    document.querySelectorAll('.table-card').forEach(c => {
+      c.classList.remove('highlighted', 'dimmed');
+    });
+    closeInfo();
+    drawConnections(null);
+    return;
+  }
+
+  activeTable = name;
+  const id = 'tbl-' + name;
+
+  // Find related tables
+  const related = new Set([id]);
+  relationships.forEach(r => {
+    if (r.from === id) related.add(r.to);
+    if (r.to === id) related.add(r.from);
+  });
+
+  document.querySelectorAll('.table-card').forEach(c => {
+    if (related.has(c.id)) {
+      c.classList.add('highlighted');
+      c.classList.remove('dimmed');
+    } else {
+      c.classList.remove('highlighted');
+      c.classList.add('dimmed');
+    }
+  });
+
+  drawConnections(name);
+  showInfo(name);
+}
+
+function showInfo(name) {
+  const info = tableInfo[name];
+  if (!info) return;
+  document.getElementById('info-title').textContent = info.title;
+  document.getElementById('info-rel').innerHTML = info.rels.map(r =>
+    `<div style="margin-bottom:4px">→ <span>${r}</span></div>`
+  ).join('');
+  document.getElementById('info-panel').classList.add('visible');
+}
+
+function closeInfo() {
+  document.getElementById('info-panel').classList.remove('visible');
+  activeTable = null;
+  document.querySelectorAll('.table-card').forEach(c => {
+    c.classList.remove('highlighted', 'dimmed');
+  });
+  drawConnections(null);
+}
+
+function filterGroup(group, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const groupMap = {
+    orders:   ['tbl-orders','tbl-order_details','tbl-shippers'],
+    products: ['tbl-products','tbl-categories','tbl-suppliers'],
+    people:   ['tbl-customers','tbl-employees'],
+    geo:      ['tbl-customers','tbl-suppliers','tbl-employees'],
+  };
+
+  document.querySelectorAll('.table-card').forEach(c => {
+    if (group === 'all') {
+      c.classList.remove('dimmed');
+    } else {
+      const show = groupMap[group]?.includes(c.id);
+      c.classList.toggle('dimmed', !show);
+    }
+  });
+
+  closeInfo();
+  drawConnections(null);
+}
+
+// Initial draw after layout
+window.addEventListener('load', () => {
+  setTimeout(() => drawConnections(null), 100);
+});
+
+window.addEventListener('resize', () => drawConnections(activeTable));
+</script>
+</body>
+</html>
