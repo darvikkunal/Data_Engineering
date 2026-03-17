@@ -62,7 +62,7 @@ Show ProductID and total_revenue rounded to 2 decimal places. Sort by total_reve
 Tables needed: order_details
 */
 select 
-    DISTINCT ProductID,
+    ProductID,
     round(sum((UnitPrice * Quantity * (1 - Discount))),2) as total_Revenue
 from order_details
 GROUP BY 1
@@ -84,3 +84,39 @@ from orders o
 LEFT join employees e ON o.employeeID = e.EmployeeID
 group by 1
 order by 2 desc;
+
+
+
+/*
+SQL — Problem 7 — Medium
+
+Show the top 5 products by total quantity sold. Display ProductID, ProductName and total_quantity_sold. 
+Sort highest to lowest.
+
+Tables needed: order_details, products
+*/
+
+select 
+    p.ProductID , p.ProductName , sum(od.Quantity) as total_quantity_sold
+from order_details od
+LEFT JOIN products p on od.ProductID = p.ProductID
+GROUP BY 1,2
+ORDER BY 3 desc
+LIMIT 5;
+/*
+SQL — Problem 8 — Medium/Hard
+
+For each category, show the CategoryName, total number of products (total_products), 
+average product unit price (avg_price) rounded to 2 decimal places, and the most expensive product price (max_price). 
+Sort by avg_price highest to lowest.
+
+Tables needed: products, categories
+*/
+
+select
+    c.categoryName , count(p.ProductID) as total_products , round(avg(p.UnitPrice),2) as avg_price ,
+    max(p.UnitPrice) as max_price
+from products p
+LEFT JOIN categories c on p.CategoryID = c.categoryID
+GROUP BY 1
+ORDER BY 3 desc;
