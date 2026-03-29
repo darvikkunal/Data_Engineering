@@ -90,3 +90,128 @@ select
 FROM cte3;
 
 
+/*
+SQL — Problem 15 — Medium
+
+Using CASE WHEN, categorise all products into price buckets:
+
+'Budget' → UnitPrice < 20
+'Mid Range' → UnitPrice between 20 and 50
+'Premium' → UnitPrice > 50
+
+Show ProductName, UnitPrice and price_category. Sort by UnitPrice highest to lowest.
+
+Tables needed: products
+*/
+
+select
+	productID,
+	ProductName,
+	Unitprice,
+CASE
+	WHEN unitPrice < 20 THEN 'Budget'
+	WHEN UnitPrice between 20 and 50 THEN 'Mid Range'
+	WHEN UnitPrice > 50 THEN 'Premium'
+	END as price_bucket
+from products
+order by Unitprice DESC;
+
+
+
+
+/*
+ SQL — Problem 16 — Medium/Hard
+
+For each order, show:
+
+OrderID
+OrderDate
+ShippedDate
+Number of days taken to ship the order as days_to_ship
+A shipping_status column using CASE WHEN:
+
+'On Time' → shipped within 7 days
+'Delayed' → took more than 7 days
+'Not Shipped' → ShippedDate is NULL
+
+
+
+Only show orders from 1997. Sort by days_to_ship highest to lowest.
+
+Tables needed: orders
+Hint: Use DATEDIFF('day', OrderDate, ShippedDate) to calculate days between two dates.
+*/
+
+select
+OrderID,
+OrderDate,
+ShippedDate,
+DATEDIFF('day', orderDate, CAST(ShippedDate AS DATE)) as days_to_ship,
+CASE
+    WHEN ShippedDate IS NULL THEN 'NOT SHIPPED'
+	WHEN days_to_ship <= 7 THEN 'ON TIME'
+	WHEN days_to_ship > 7 THEN 'DELAYED'
+END as shipping_status
+FROM orders
+WHERE YEAR(OrderDate) = 1997
+ORDER BY days_to_ship desc;
+
+
+/*
+SQL — Problem 17 — Medium
+Using string functions, clean and transform customer data:
+
+CustomerID
+CompanyName in UPPER CASE as company_upper
+ContactName — first name only (before the space) as first_name
+Phone — length of phone number as phone_length
+Country — replace 'UK' with 'United Kingdom' as country_clean
+
+Sort by CompanyName A→Z. Table: customers
+*/
+
+select
+	customerid,
+	UPPER(companyName) as company_upper,
+	SPLIT_PART(contactName , ' ',1) as first_name,
+	length(phone) as phone_length,
+	replace(country,'UK','United Kingdom') as country_clean
+from customers
+order by companyName asc;
+
+
+
+/*
+SQL — Problem 18 — Hard
+Recursive CTE to show the employee hierarchy:
+
+EmployeeID, full_name, Title
+ManagerName (full name of who they report to)
+level — 1 for top manager, 2 for direct reports, 3 for next level down
+
+Table: employees
+*/
+
+with RECURSIVE hierarchy as (
+	select
+		employeeid,
+		concat(firstname,' ',lastname) as empfullname,
+		title,
+		CAST(NULL AS VARCHAR) AS ManagerName,
+		1 AS level
+	from employees
+	where ReportsTo = 'NULL'
+	
+	UNION ALL
+	
+	SELECT 
+		e.employeeID,
+		concat(e.firstname,' ',e.lastname) as empfullname,
+		e.title,
+		h.empfullname as ManagerName,
+		h.level + 1
+	FROM employees e
+	JOIN hierarchy h on e.reportsto = CAST(h.employeeid AS VARCHAR)
+)
+SELECT * from hierarchy
+ORDER BY level, employeeID;
