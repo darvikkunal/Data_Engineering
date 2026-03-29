@@ -10,31 +10,34 @@
 #remove 3 random characters from start and end. Now remove the last letter and append it to
 #the beginning
 # Your program should ask whether you want to code or decode
-import random as rnd
+import random , string
 
 def secret_code():
     code = input("Enter if you wanna code or de-code : ")
+    word = input("Enter your code word :") #hello
     if code.lower() == 'code':
-        word = input("Enter your code word :")
         if len(word) >= 3:
-            removed = word[0].remove()
-            de_code = removed.append()
-            de_code = word.append(rnd(3))
-            de_code = word[0].append(rnd(3))
+            s1 = word[1:] #everything after first letter ;  ello
+            s2 = word[0] #just the first letter. ; h
+            s3 = s1 + s2 #elloh
+            rand1 = ''.join(random.choices(string.ascii_letters, k=3)).lower()
+            rand2 = ''.join(random.choices(string.ascii_letters, k=3)).lower()
+            de_code = rand1 + s3 + rand2
             print(f"The de-code word is {de_code}")
         else:
             de_code = word[::-1]
-            print(f"The de-code word is {de_code}")
+            print(f"The de-code word is : {de_code}")
     elif code.lower() == 'decode':
         if len(word) <3 :
             coded = word[::-1]
-            print(f"The coded word is {coded}")
+            print(f"The coded word is : {coded}")
         else:
-            coded = word.remove[:-3]
-            coded = word.remove[2:]
-            coded = word.remove[:-1]
-            coded = word.append[0:]
-            print(f"The coded word is {coded}")
+            st1 = word[3:-3] #removes 3 from start and 3 from end
+            st2 = st1[-1] + st1[:-1]
+            print(f"The coded word is {st2}")
     else:
-        print("YOU HAVE ENTERED WRONG ONE!")
+        print("YOU HAVE ENTERED WRONG ONE! PLEASE CHECK!!! \n")
+    return
 
+
+secret_code()
