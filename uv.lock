@@ -2,6 +2,12 @@ version = 1
 revision = 3
 requires-python = ">=3.12"
 
+[manifest]
+members = [
+    "data-engineering",
+    "demo",
+]
+
 [[package]]
 name = "data-engineering"
 version = "0.1.0"
@@ -35,6 +41,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/77/32/decbfd165e9985ba9
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cf/7a/ea0f3e3ea74be36fc7cf54f966cde732a3de72697983cdb5646b0a4dacde/datetime-6.0-py3-none-any.whl", hash = "sha256:d19988f0657a4e72c9438344157254a8dcad6aea8cd5ae70a5d1b5a75e5dc930", size = 52637, upload-time = "2025-11-25T08:00:33.077Z" },
 ]
+
+[[package]]
+name = "demo"
+version = "0.1.0"
+source = { virtual = "demo" }
+dependencies = [
+    { name = "pandas" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pandas", specifier = ">=2.3.3" }]
 
 [[package]]
 name = "greenlet"
