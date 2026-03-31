@@ -7,3 +7,6 @@ sql/__pycache__.DS_Store
 aws-glue-libs
 RUNNING_SPARK.md
 sql_dwh_project_resources
+.claude
+.vscode
+ClickHouse Local.session.sql

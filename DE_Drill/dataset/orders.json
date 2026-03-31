@@ -1,0 +1,26 @@
+[
+    {
+        "order_id": 101,
+        "customer": "Rahul Sharma",
+        "amount": 2500,
+        "status": "Delivered"
+    },
+    {
+        "order_id": 102,
+        "customer": "Anjali Verma",
+        "amount": 1800,
+        "status": "Pending"
+    },
+    {
+        "order_id": 103,
+        "customer": "Kiran Reddy",
+        "amount": 3200,
+        "status": "Shipped"
+    },
+    {
+        "order_id": 104,
+        "customer": "Nilo Singh",
+        "amount": 2800,
+        "status": "Pending"
+    }
+]
