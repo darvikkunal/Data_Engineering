@@ -215,3 +215,111 @@ with RECURSIVE hierarchy as (
 )
 SELECT * from hierarchy
 ORDER BY level, employeeID;
+
+
+
+/*
+ SQL — Problem 19 — Medium
+Using PIVOT, show the total revenue per category per year as a pivot table.
+
+Rows → CategoryName
+Columns → years (1996, 1997, 1998) as separate columns
+Values → total revenue (rounded to 2 decimal places)
+
+Tables needed: order_details, orders, products, categories
+Hints:
+sql-- Step 1: build a base CTE with CategoryName, year, revenue
+-- Step 2: use PIVOT on the year column
+
+PIVOT (SUM(revenue) FOR year IN (1996, 1997, 1998))
+*/
+
+/*
+ SQL — Problem 19 — Medium
+Using PIVOT, show the total revenue per category per year as a pivot table.
+
+Rows → CategoryName
+Columns → years (1996, 1997, 1998) as separate columns
+Values → total revenue (rounded to 2 decimal places)
+
+Tables needed: order_details, orders, products, categories
+Hints:
+sql-- Step 1: build a base CTE with CategoryName, year, revenue
+-- Step 2: use PIVOT on the year column
+
+PIVOT (SUM(revenue) FOR year IN (1996, 1997, 1998))
+*/
+
+with base_cte as (
+select 
+	c.categoryname , YEAR(o.orderdate) as year , ROUND(sum(od.Unitprice * od.Quantity * (1-od.discount)),2) as revenue
+from order_details od
+JOIN orders o on Od .orderid = o.orderid
+JOIN products p on od.productid = p.productid 
+JOIN categories c on c.categoryid = p.categoryid
+group by 1,2
+)
+SELECT *
+FROM base_cte
+PIVOT (SUM(revenue) FOR year IN (1996, 1997, 1998)) AS pivot_table;
+
+
+
+/*
+SQL — Problem 20 — Medium/Hard
+Find the top 5 most reordered products — products that appear in the most distinct orders.
+
+Show ProductID, ProductName, total_orders, total_quantity_sold
+Sort by total_orders descending
+
+Tables needed: order_details, products
+Hints:
+sqlCOUNT(DISTINCT orderid)   -- counts unique orders per product
+SUM(quantity)             -- total quantity sold
+*/
+
+select
+	od.ProductID,
+	p.ProductName,
+	count(distinct od.orderid) as total_order,
+	sum(od.quantity) as total_quantity
+from order_details od
+JOIN products p ON od.productid = p.productid
+group by 1,2
+order by 3 desc
+LIMIT 5;
+
+
+
+/*
+SQL — Problem 21 — Medium
+Using UNPIVOT, transform the pivot table from Problem 19 back into a long format.
+Show:
+
+CategoryName
+year (as a column with values 1996, 1997, 1998)
+revenue (the value for that year)
+
+Sort by CategoryName A→Z, then year ascending.
+Tables needed: Use your Problem 19 pivot result as a CTE, then UNPIVOT it.
+*/
+
+with base_cte as (
+select 
+	c.categoryname , YEAR(o.orderdate) as year , ROUND(sum(od.Unitprice * od.Quantity * (1-od.discount)),2) as revenue
+from order_details od
+JOIN orders o on Od .orderid = o.orderid
+JOIN products p on od.productid = p.productid 
+JOIN categories c on c.categoryid = p.categoryid
+group by 1,2
+),
+pivot_cte AS(
+SELECT *
+FROM base_cte
+PIVOT (SUM(revenue) FOR year IN (1996, 1997, 1998)) AS pivot_table
+)
+select 
+	categoryName , year , revenue
+from pivot_cte
+UNPIVOT (revenue FOR year in ('1996','1997','1998'))
+ORDER BY categoryName , year;
