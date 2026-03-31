@@ -323,3 +323,60 @@ select
 from pivot_cte
 UNPIVOT (revenue FOR year in ('1996','1997','1998'))
 ORDER BY categoryName , year;
+
+
+/*
+SQL — Problem 22 — Hard
+Find all customers who have increased their spending every single year they've been active. Show:
+
+CustomerID
+CompanyName
+first_year_revenue
+last_year_revenue
+total_years_active
+
+Tables needed: orders, order_details, customers
+
+-- Step 1: revenue per customer per year
+-- Step 2: use LAG() to get previous year revenue
+-- Step 3: check if revenue > LAG revenue for every year
+-- Step 4: filter customers where ALL years show an increase
+-- Hint: COUNT and SUM of a boolean condition can help here
+
+-- A customer "always increased" if:
+-- number of years where revenue > prev_year revenue
+-- equals total years - 1 (first year has no previous)
+*/
+with revenue_cte as (
+	select
+	c.customerid,
+    c.companyname,
+	YEAR(o.orderdate) as orderyear,
+	ROUND(sum(od.Unitprice * od.Quantity * (1-od.discount)),2) as total_revenue
+from orders o 
+JOIN order_details od ON o.orderid = od.orderid
+JOIN customers c on c.customerid = o.customerid
+group by 1 , 2 , 3
+),
+lag_cte as (
+	select 
+		customerid,
+		orderyear,
+		total_revenue,
+		companyname,
+        LAG(total_revenue) OVER (PARTITION BY customerid ORDER BY orderyear) as prev_revenue,
+        FIRST_VALUE(total_revenue) OVER (PARTITION BY customerid ORDER BY orderyear) as first_year_revenue,
+        LAST_VALUE(total_revenue)  OVER (PARTITION BY customerid ORDER BY orderyear ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as last_year_revenue
+    FROM revenue_cte
+)
+SELECT
+    customerid,
+    companyname,
+    first_year_revenue,
+    last_year_revenue,
+    COUNT(*) as total_years,
+    SUM(CASE WHEN total_revenue > prev_revenue THEN 1 ELSE 0 END) as years_increased
+FROM lag_cte
+GROUP BY 1 , 2,3,4
+HAVING years_increased = total_years - 1
+AND total_years > 1;
