@@ -380,3 +380,56 @@ FROM lag_cte
 GROUP BY 1 , 2,3,4
 HAVING years_increased = total_years - 1
 AND total_years > 1;
+
+
+
+
+/*
+Problem 23 — Medium
+Find duplicate orders — cases where the same customer placed orders on the same date more than once. Show:
+
+CustomerID
+OrderDate
+order_count — how many orders on that date
+All OrderIDs on that date
+
+Tables needed: orders
+*/
+select
+	customerid,
+	OrderDate,
+	count(*) as order_count,
+    STRING_AGG(CAST(orderid AS VARCHAR), ', ') as order_ids
+FROM orders
+group by 1,2
+HAVING count(*) > 1;
+
+
+
+
+/*
+SQL — Problem 24 — Hard
+Using ROW_NUMBER(), deduplicate the order_details table — keep only the highest quantity row per OrderID + ProductID combination. Show:
+
+OrderID
+ProductID
+UnitPrice
+Quantity
+Discount
+
+Tables needed: order_details
+*/
+with rank_cte as 
+(select
+	OrderID,
+	ProductID,
+	UnitPrice,
+	Quantity,
+	Discount,
+	ROW_NUMBER() OVER(PARTITION BY OrderID, ProductID ORDER BY Quantity DESC) as row_nbr
+FROM order_details
+)
+select
+    OrderID, ProductID, UnitPrice, Quantity, Discount
+from rank_cte
+where row_nbr = 1;
