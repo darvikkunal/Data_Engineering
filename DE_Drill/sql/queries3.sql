@@ -31,7 +31,7 @@ JOIN customers c ON r.CustomerID = c.CustomerID
 ORDER BY revenue DESC;
 
 
-EXPLAIN SELECT
+SELECT
     e.EmployeeID,
     e.FirstName,
     e.LastName,
@@ -39,6 +39,6 @@ EXPLAIN SELECT
 FROM employees e
 JOIN orders o ON e.EmployeeID = o.EmployeeID
 JOIN order_details od ON o.OrderID = od.OrderID
-JOIN order_details od2 ON od.OrderID = od2.OrderID  -- spot the bug!
+--JOIN order_details od2 ON od.OrderID = od2.OrderID  -- spot the bug!
 GROUP BY 1, 2, 3
 ORDER BY total_revenue DESC;
