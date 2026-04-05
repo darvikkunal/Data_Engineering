@@ -1,0 +1,6 @@
+2026-04-04 19:54:26,582 - INFO - pipeline started 
+
+2026-04-04 19:54:26,671 - DEBUG - Starting new HTTPS connection (1): jsonplaceholder.typicode.com:443
+2026-04-04 19:54:27,517 - DEBUG - https://jsonplaceholder.typicode.com:443 "GET /user HTTP/1.1" 404 2
+2026-04-04 19:54:27,517 - WARNING - pipeline did not complete all steps : 404
+2026-04-04 19:54:27,518 - ERROR - Unexpected status : Bad status: 404
