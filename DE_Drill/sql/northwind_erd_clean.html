@@ -1,0 +1,137 @@
+
+<style>
+body { margin: 0; }
+.erd-wrap { padding: 16px 0; }
+.tbl { margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--color-border-secondary); }
+.tbl-head { padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.tbl-head span { font-size: 11px; font-weight: 400; margin-left: 6px; color: var(--color-text-secondary); }
+.tbl-row { display: flex; align-items: center; gap: 8px; padding: 5px 14px; font-size: 12px; border-top: 1px solid var(--color-border-tertiary); background: var(--color-background-primary); }
+.tbl-row:hover { background: var(--color-background-secondary); }
+.badge { font-size: 10px; font-weight: 500; padding: 1px 5px; border-radius: 4px; min-width: 24px; text-align: center; }
+.pk { background: #FFF3CD; color: #856404; }
+.fk { background: #D1ECF1; color: #0C5460; }
+.col-name { color: var(--color-text-primary); font-family: var(--font-mono); font-size: 11px; }
+.col-type { color: var(--color-text-tertiary); font-size: 11px; margin-left: auto; }
+.section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin: 20px 0 8px; }
+.rel-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--color-border-tertiary); color: var(--color-text-secondary); }
+.rel-row:last-child { border-bottom: none; }
+.rel-from { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-primary); }
+.rel-arrow { color: var(--color-text-tertiary); }
+.rel-label { color: var(--color-text-tertiary); font-size: 11px; margin-left: auto; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* Color headers */
+.h-blue  { background: #E6F1FB; color: #0C447C; }
+.h-teal  { background: #E1F5EE; color: #085041; }
+.h-amber { background: #FAEEDA; color: #633806; }
+.h-purple{ background: #EEEDFE; color: #26215C; }
+.h-coral { background: #FAECE7; color: #4A1B0C; }
+.h-green { background: #EAF3DE; color: #173404; }
+.h-pink  { background: #FBEAF0; color: #4B1528; }
+.h-gray  { background: #F1EFE8; color: #2C2C2A; }
+
+@media (prefers-color-scheme: dark) {
+  .h-blue  { background: #0C447C; color: #B5D4F4; }
+  .h-teal  { background: #085041; color: #9FE1CB; }
+  .h-amber { background: #633806; color: #FAC775; }
+  .h-purple{ background: #26215C; color: #CECBF6; }
+  .h-coral { background: #4A1B0C; color: #F5C4B3; }
+  .h-green { background: #173404; color: #C0DD97; }
+  .h-pink  { background: #4B1528; color: #F4C0D1; }
+  .h-gray  { background: #2C2C2A; color: #D3D1C7; }
+  .pk { background: #3d3500; color: #FAC775; }
+  .fk { background: #002f35; color: #9FE1CB; }
+}
+</style>
+
+<div class="erd-wrap">
+
+<div class="grid">
+  <div class="tbl">
+    <div class="tbl-head h-blue">orders <span>830 rows — central table</span></div>
+    <div class="tbl-row"><span class="badge pk">PK</span><span class="col-name">OrderID</span><span class="col-type">int</span></div>
+    <div class="tbl-row"><span class="badge fk">FK</span><span class="col-name">CustomerID</span><span class="col-type">→ customers</span></div>
+    <div class="tbl-row"><span class="badge fk">FK</span><span class="col-name">EmployeeID</span><span class="col-type">→ employees</span></div>
+    <div class="tbl-row"><span class="badge fk">FK</span><span class="col-name">ShipVia</span><span class="col-type">→ shippers</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">OrderDate</span><span class="col-type">date</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">ShippedDate</span><span class="col-type">date</span></div>
+  </div>
+
+  <div class="tbl">
+    <div class="tbl-head h-teal">order_details <span>2155 rows — revenue lives here</span></div>
+    <div class="tbl-row"><span class="badge fk">FK</span><span class="col-name">OrderID</span><span class="col-type">→ orders</span></div>
+    <div class="tbl-row"><span class="badge fk">FK</span><span class="col-name">ProductID</span><span class="col-type">→ products</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">UnitPrice</span><span class="col-type">float</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Quantity</span><span class="col-type">int</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Discount</span><span class="col-type">float</span></div>
+  </div>
+</div>
+
+<div class="grid3">
+  <div class="tbl">
+    <div class="tbl-head h-amber">customers <span>91 rows</span></div>
+    <div class="tbl-row"><span class="badge pk">PK</span><span class="col-name">CustomerID</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">CompanyName</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">ContactName</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Country</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Phone</span><span class="col-type">string</span></div>
+  </div>
+
+  <div class="tbl">
+    <div class="tbl-head h-purple">employees <span>9 rows</span></div>
+    <div class="tbl-row"><span class="badge pk">PK</span><span class="col-name">EmployeeID</span><span class="col-type">int</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">FirstName</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">LastName</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Title</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge fk">FK</span><span class="col-name">ReportsTo</span><span class="col-type">→ self ⟳</span></div>
+  </div>
+
+  <div class="tbl">
+    <div class="tbl-head h-coral">products <span>77 rows</span></div>
+    <div class="tbl-row"><span class="badge pk">PK</span><span class="col-name">ProductID</span><span class="col-type">int</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">ProductName</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge fk">FK</span><span class="col-name">CategoryID</span><span class="col-type">→ categories</span></div>
+    <div class="tbl-row"><span class="badge fk">FK</span><span class="col-name">SupplierID</span><span class="col-type">→ suppliers</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">UnitPrice</span><span class="col-type">float</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">UnitsInStock</span><span class="col-type">int</span></div>
+  </div>
+</div>
+
+<div class="grid3">
+  <div class="tbl">
+    <div class="tbl-head h-green">categories <span>8 rows</span></div>
+    <div class="tbl-row"><span class="badge pk">PK</span><span class="col-name">CategoryID</span><span class="col-type">int</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">CategoryName</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Description</span><span class="col-type">string</span></div>
+  </div>
+
+  <div class="tbl">
+    <div class="tbl-head h-pink">suppliers <span>29 rows</span></div>
+    <div class="tbl-row"><span class="badge pk">PK</span><span class="col-name">SupplierID</span><span class="col-type">int</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">CompanyName</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Country</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Phone</span><span class="col-type">string</span></div>
+  </div>
+
+  <div class="tbl">
+    <div class="tbl-head h-gray">shippers <span>3 rows</span></div>
+    <div class="tbl-row"><span class="badge pk">PK</span><span class="col-name">ShipperID</span><span class="col-type">int</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">CompanyName</span><span class="col-type">string</span></div>
+    <div class="tbl-row"><span class="badge" style="min-width:24px"></span><span class="col-name">Phone</span><span class="col-type">string</span></div>
+  </div>
+</div>
+
+<div class="section-label">Relationships</div>
+<div style="border-radius:10px;border:1.5px solid var(--color-border-secondary);padding:4px 14px;background:var(--color-background-primary)">
+  <div class="rel-row"><span class="rel-from">customers</span><span class="rel-arrow">──── 1:many ────▶</span><span class="rel-from">orders</span><span class="rel-label">one customer places many orders</span></div>
+  <div class="rel-row"><span class="rel-from">employees</span><span class="rel-arrow">──── 1:many ────▶</span><span class="rel-from">orders</span><span class="rel-label">one employee handles many orders</span></div>
+  <div class="rel-row"><span class="rel-from">shippers</span><span class="rel-arrow">──── 1:many ────▶</span><span class="rel-from">orders</span><span class="rel-label">one shipper ships many orders</span></div>
+  <div class="rel-row"><span class="rel-from">orders</span><span class="rel-arrow">──── 1:many ────▶</span><span class="rel-from">order_details</span><span class="rel-label">one order has many line items</span></div>
+  <div class="rel-row"><span class="rel-from">products</span><span class="rel-arrow">──── 1:many ────▶</span><span class="rel-from">order_details</span><span class="rel-label">one product appears in many orders</span></div>
+  <div class="rel-row"><span class="rel-from">categories</span><span class="rel-arrow">──── 1:many ────▶</span><span class="rel-from">products</span><span class="rel-label">one category groups many products</span></div>
+  <div class="rel-row"><span class="rel-from">suppliers</span><span class="rel-arrow">──── 1:many ────▶</span><span class="rel-from">products</span><span class="rel-label">one supplier provides many products</span></div>
+  <div class="rel-row"><span class="rel-from">employees</span><span class="rel-arrow">──── 1:many ────▶</span><span class="rel-from">employees</span><span class="rel-label">self-join — manager to reports (Problem 18!)</span></div>
+</div>
+
+</div>

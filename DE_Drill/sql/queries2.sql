@@ -215,3 +215,221 @@ with RECURSIVE hierarchy as (
 )
 SELECT * from hierarchy
 ORDER BY level, employeeID;
+
+
+
+/*
+ SQL — Problem 19 — Medium
+Using PIVOT, show the total revenue per category per year as a pivot table.
+
+Rows → CategoryName
+Columns → years (1996, 1997, 1998) as separate columns
+Values → total revenue (rounded to 2 decimal places)
+
+Tables needed: order_details, orders, products, categories
+Hints:
+sql-- Step 1: build a base CTE with CategoryName, year, revenue
+-- Step 2: use PIVOT on the year column
+
+PIVOT (SUM(revenue) FOR year IN (1996, 1997, 1998))
+*/
+
+/*
+ SQL — Problem 19 — Medium
+Using PIVOT, show the total revenue per category per year as a pivot table.
+
+Rows → CategoryName
+Columns → years (1996, 1997, 1998) as separate columns
+Values → total revenue (rounded to 2 decimal places)
+
+Tables needed: order_details, orders, products, categories
+Hints:
+sql-- Step 1: build a base CTE with CategoryName, year, revenue
+-- Step 2: use PIVOT on the year column
+
+PIVOT (SUM(revenue) FOR year IN (1996, 1997, 1998))
+*/
+
+with base_cte as (
+select 
+	c.categoryname , YEAR(o.orderdate) as year , ROUND(sum(od.Unitprice * od.Quantity * (1-od.discount)),2) as revenue
+from order_details od
+JOIN orders o on Od .orderid = o.orderid
+JOIN products p on od.productid = p.productid 
+JOIN categories c on c.categoryid = p.categoryid
+group by 1,2
+)
+SELECT *
+FROM base_cte
+PIVOT (SUM(revenue) FOR year IN (1996, 1997, 1998)) AS pivot_table;
+
+
+
+/*
+SQL — Problem 20 — Medium/Hard
+Find the top 5 most reordered products — products that appear in the most distinct orders.
+
+Show ProductID, ProductName, total_orders, total_quantity_sold
+Sort by total_orders descending
+
+Tables needed: order_details, products
+Hints:
+sqlCOUNT(DISTINCT orderid)   -- counts unique orders per product
+SUM(quantity)             -- total quantity sold
+*/
+
+select
+	od.ProductID,
+	p.ProductName,
+	count(distinct od.orderid) as total_order,
+	sum(od.quantity) as total_quantity
+from order_details od
+JOIN products p ON od.productid = p.productid
+group by 1,2
+order by 3 desc
+LIMIT 5;
+
+
+
+/*
+SQL — Problem 21 — Medium
+Using UNPIVOT, transform the pivot table from Problem 19 back into a long format.
+Show:
+
+CategoryName
+year (as a column with values 1996, 1997, 1998)
+revenue (the value for that year)
+
+Sort by CategoryName A→Z, then year ascending.
+Tables needed: Use your Problem 19 pivot result as a CTE, then UNPIVOT it.
+*/
+
+with base_cte as (
+select 
+	c.categoryname , YEAR(o.orderdate) as year , ROUND(sum(od.Unitprice * od.Quantity * (1-od.discount)),2) as revenue
+from order_details od
+JOIN orders o on Od .orderid = o.orderid
+JOIN products p on od.productid = p.productid 
+JOIN categories c on c.categoryid = p.categoryid
+group by 1,2
+),
+pivot_cte AS(
+SELECT *
+FROM base_cte
+PIVOT (SUM(revenue) FOR year IN (1996, 1997, 1998)) AS pivot_table
+)
+select 
+	categoryName , year , revenue
+from pivot_cte
+UNPIVOT (revenue FOR year in ('1996','1997','1998'))
+ORDER BY categoryName , year;
+
+
+/*
+SQL — Problem 22 — Hard
+Find all customers who have increased their spending every single year they've been active. Show:
+
+CustomerID
+CompanyName
+first_year_revenue
+last_year_revenue
+total_years_active
+
+Tables needed: orders, order_details, customers
+
+-- Step 1: revenue per customer per year
+-- Step 2: use LAG() to get previous year revenue
+-- Step 3: check if revenue > LAG revenue for every year
+-- Step 4: filter customers where ALL years show an increase
+-- Hint: COUNT and SUM of a boolean condition can help here
+
+-- A customer "always increased" if:
+-- number of years where revenue > prev_year revenue
+-- equals total years - 1 (first year has no previous)
+*/
+with revenue_cte as (
+	select
+	c.customerid,
+    c.companyname,
+	YEAR(o.orderdate) as orderyear,
+	ROUND(sum(od.Unitprice * od.Quantity * (1-od.discount)),2) as total_revenue
+from orders o 
+JOIN order_details od ON o.orderid = od.orderid
+JOIN customers c on c.customerid = o.customerid
+group by 1 , 2 , 3
+),
+lag_cte as (
+	select 
+		customerid,
+		orderyear,
+		total_revenue,
+		companyname,
+        LAG(total_revenue) OVER (PARTITION BY customerid ORDER BY orderyear) as prev_revenue,
+        FIRST_VALUE(total_revenue) OVER (PARTITION BY customerid ORDER BY orderyear) as first_year_revenue,
+        LAST_VALUE(total_revenue)  OVER (PARTITION BY customerid ORDER BY orderyear ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as last_year_revenue
+    FROM revenue_cte
+)
+SELECT
+    customerid,
+    companyname,
+    first_year_revenue,
+    last_year_revenue,
+    COUNT(*) as total_years,
+    SUM(CASE WHEN total_revenue > prev_revenue THEN 1 ELSE 0 END) as years_increased
+FROM lag_cte
+GROUP BY 1 , 2,3,4
+HAVING years_increased = total_years - 1
+AND total_years > 1;
+
+
+
+
+/*
+Problem 23 — Medium
+Find duplicate orders — cases where the same customer placed orders on the same date more than once. Show:
+
+CustomerID
+OrderDate
+order_count — how many orders on that date
+All OrderIDs on that date
+
+Tables needed: orders
+*/
+select
+	customerid,
+	OrderDate,
+	count(*) as order_count,
+    STRING_AGG(CAST(orderid AS VARCHAR), ', ') as order_ids
+FROM orders
+group by 1,2
+HAVING count(*) > 1;
+
+
+
+
+/*
+SQL — Problem 24 — Hard
+Using ROW_NUMBER(), deduplicate the order_details table — keep only the highest quantity row per OrderID + ProductID combination. Show:
+
+OrderID
+ProductID
+UnitPrice
+Quantity
+Discount
+
+Tables needed: order_details
+*/
+with rank_cte as 
+(select
+	OrderID,
+	ProductID,
+	UnitPrice,
+	Quantity,
+	Discount,
+	ROW_NUMBER() OVER(PARTITION BY OrderID, ProductID ORDER BY Quantity DESC) as row_nbr
+FROM order_details
+)
+select
+    OrderID, ProductID, UnitPrice, Quantity, Discount
+from rank_cte
+where row_nbr = 1;
