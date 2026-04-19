@@ -1,4 +1,17 @@
-Hey! There :)$HI, Hello This is FIle IO 
- Hey! There :) 	 Text 2Hey I'm in the file
- Hey I'm in the fileline1 
-line2 
+2026-04-19 11:13:24,405 - INFO - The value of x is : 2 
+2026-04-19 11:13:24,405 - INFO - info
+2026-04-19 11:13:24,405 - WARNING - warning
+2026-04-19 11:13:24,405 - ERROR - error
+2026-04-19 11:13:24,405 - CRITICAL - critical
+2026-04-19 11:13:24,405 - ERROR - ZeroDivisionError
+Traceback (most recent call last):
+  File "/Users/darvikkunalbanda/DataEngineering/DE_Drill/python/logging1.py", line 16, in <module>
+    1/0
+    ~^~
+ZeroDivisionError: division by zero
+2026-04-19 11:13:24,408 - ERROR - test error
+Traceback (most recent call last):
+  File "/Users/darvikkunalbanda/DataEngineering/DE_Drill/python/logging1.py", line 16, in <module>
+    1/0
+    ~^~
+ZeroDivisionError: division by zero
