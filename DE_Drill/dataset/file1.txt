@@ -1,1 +1,1 @@
-Text 1
+2026-04-19 11:20:25,045 - INFO - test the custom logger
