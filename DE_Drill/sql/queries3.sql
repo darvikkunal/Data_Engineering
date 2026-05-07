@@ -72,3 +72,88 @@ SELECT CustomerID, avg_order_value, total_orders
 FROM customer_stats
 WHERE total_orders > 5
 ORDER BY avg_order_value DESC;
+
+
+/*
+🗄️ SQL Problem #29 — Medium
+The Challenge:
+Find the top 3 employees by total number of orders handled, but only count orders from the year 1997. Show EmployeeID, FirstName, LastName, total_orders.
+Tables: employees, orders
+
+Hints:
+
+Filter orders WHERE YEAR(OrderDate) = 1997 FIRST
+GROUP BY employee, COUNT orders
+RANK or LIMIT to get top 3
+*/
+
+SELECT 
+	e.EmployeeID, e.FirstName, e.LastName, count(o.orderid) as total_orders
+FROM employees e
+JOIN orders o ON e.employeeID = o.employeeID
+WHERE YEAR(o.orderdate) = 1997
+group by 1,2,3
+order by total_orders DESC
+LIMIT 3;
+
+
+
+/*
+🗄️ SQL Problem #30 — Medium/Hard
+The Challenge:
+For each category, find:
+
+category_name
+total_products — how many products are in that category
+avg_unit_price — average unit price of products (rounded to 2 decimals)
+most_expensive_product — name of the most expensive product in that category
+
+Show only categories where avg_unit_price > 20. Order by avg_unit_price DESC.
+Tables: categories, products
+*/
+-- Step 1: CTE to get most expensive product per category
+SELECT
+    c.categoryname,
+    COUNT(p.productid) as total_products,
+    ROUND(AVG(p.unitprice), 2) as avg_unit_price,
+    MAX(sub.most_expensive_product) as most_expensive_product
+FROM products p
+JOIN categories c ON p.categoryid = c.categoryid
+JOIN (
+    SELECT
+        categoryid,
+        FIRST_VALUE(productname) OVER(
+            PARTITION BY categoryid
+            ORDER BY unitprice DESC
+        ) as most_expensive_product
+    FROM products
+) sub ON c.categoryid = sub.categoryid
+GROUP BY 1
+HAVING ROUND(AVG(p.unitprice), 2) > 20
+ORDER BY avg_unit_price DESC;
+
+
+
+/*
+SQL Problem #31 — Medium/Hard
+Find all customers who placed more than 5 orders AND whose average order value (quantity × unit price) is above 1000. 
+Show customerid, companyname, total_orders, avg_order_value (rounded to 2 decimals). Order by avg_order_value DESC.
+Tables: customers, orders, order_details
+*/
+
+WITH order_totals AS (
+    SELECT 
+        o.customerid,
+        o.orderid,
+        SUM(od.quantity * od.unitprice) as order_value
+    FROM orders o
+    JOIN order_details od ON o.orderid = od.orderid
+    GROUP BY 1, 2
+)
+select 
+	c.customerid, c.companyname, count(ot.orderid) as total_orders , round(avg(ot.order_value),2) as avg_order_value
+from customers c 
+JOIN order_totals ot ON c.customerid = ot.customerid
+group by 1,2
+having count(ot.orderid) > 5 AND round(avg(ot.order_value),2) > 1000
+order by avg_order_value DESC;
