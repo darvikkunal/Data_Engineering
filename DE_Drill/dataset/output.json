@@ -1,0 +1,27 @@
+[
+  {
+    "order_id": "ORD003",
+    "final_price": 945.0,
+    "discount": 105.0
+  },
+  {
+    "order_id": "ORD005",
+    "final_price": 864.0,
+    "discount": 96.0
+  },
+  {
+    "order_id": "ORD009",
+    "final_price": 594.0,
+    "discount": 66.0
+  },
+  {
+    "order_id": "ORD011",
+    "final_price": 1053.0,
+    "discount": 117.0
+  },
+  {
+    "order_id": "ORD013",
+    "final_price": 1323.0,
+    "discount": 147.0
+  }
+]
