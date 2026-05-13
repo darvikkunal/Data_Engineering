@@ -157,3 +157,27 @@ JOIN order_totals ot ON c.customerid = ot.customerid
 group by 1,2
 having count(ot.orderid) > 5 AND round(avg(ot.order_value),2) > 1000
 order by avg_order_value DESC;
+
+/*
+🗄️ SQL Problem #32 — Hard
+Find the month-over-month revenue growth % for each month in 1997.
+Show: month, total_revenue, prev_month_revenue, growth_pct (rounded to 2 decimals)
+Tables: orders, order_details
+*/
+
+with monthly_revenue as (
+	select month(o.orderdate) as month, 
+	sum(od.unitprice * od.quantity) as total_revenue
+	from orders o JOIN order_details od ON o.orderid = od.orderid
+	where YEAR(o.orderdate) = 1997
+	GROUP BY MONTH(o.orderdate)
+)
+select
+	month,
+	total_revenue,
+	LAG(total_revenue) OVER (ORDER BY month) as perv_month_revenue,
+	ROUND(
+	((total_revenue - LAG(total_revenue) OVER (ORDER BY MONTH)) /
+	LAG(total_revenue) OVER (ORDER BY month)) * 100, 2) as growth_pct
+FROM monthly_revenue
+ORDER BY month;
