@@ -10,3 +10,4 @@ sql_dwh_project_resources
 .claude
 .vscode
 ClickHouse Local.session.sql
+uv.lock
