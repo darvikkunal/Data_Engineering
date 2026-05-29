@@ -11,3 +11,14 @@ sql_dwh_project_resources
 .vscode
 ClickHouse Local.session.sql
 uv.lock
+DE_Drill/pyspark/words.txt
+DE_Drill/pyspark/rdd.txt/_SUCCESS
+.gitignore
+DE_Drill/pyspark/rdd.txt/._SUCCESS.crc
+
+# PySpark notebook and generated output artifacts
+DE_Drill/pyspark/pyspark_3.ipynb
+DE_Drill/pyspark/pyspark_rdd1.ipynb
+DE_Drill/pyspark/rdd.txt/
+DE_Drill/pyspark/rdd_sequence/
+DE_Drill/pyspark/rdd_sequence_test_pair/
