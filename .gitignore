@@ -22,3 +22,8 @@ DE_Drill/pyspark/pyspark_rdd1.ipynb
 DE_Drill/pyspark/rdd.txt/
 DE_Drill/pyspark/rdd_sequence/
 DE_Drill/pyspark/rdd_sequence_test_pair/
+
+# Generated dataset files (Spark output)
+DE_Drill/dataset/*.csv/
+DE_Drill/dataset/*.parquet/
+DE_Drill/dataset/*.orc/
