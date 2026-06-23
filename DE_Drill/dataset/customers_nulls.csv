@@ -1,0 +1,21 @@
+customer_id,name,city,state,signup_date,tier,score,last_order_date,active,region
+C001,Kate,Boston,NY,2024-12-09,Silver,328,2025-02-24,true,North
+C002,Jack,Portland,NY,2024-01-03,,338,2025-05-20,true,South
+C003,,Atlanta,OR,2024-04-15,Gold,,2025-01-25,true,West
+C004,Frank,Austin,IL,,Gold,204,,true,
+C005,Noah,Seattle,TX,2024-05-26,Bronze,847,2025-04-18,,West
+C006,Bob,Atlanta,TX,2024-11-20,Gold,691,2025-02-23,true,North
+C007,Kate,Denver,TX,,Silver,987,,false,West
+C008,Kate,Seattle,IL,2024-06-12,,786,2025-03-23,true,
+C009,Ivy,Denver,IL,2024-08-13,Gold,755,2025-06-18,true,East
+C010,Noah,New York,CO,2024-01-26,Gold,510,2025-03-03,true,East
+C011,Diana,Miami,OR,2024-11-15,Silver,371,2025-02-08,false,West
+C012,Olivia,Dallas,OR,2024-06-08,Silver,621,2025-04-03,true,North
+C013,Charlie,Chicago,OR,2024-10-03,Platinum,490,2025-05-15,,North
+C014,Kate,Boston,GA,2024-05-25,Gold,214,2025-03-14,true,West
+C015,Alice,Austin,GA,2024-03-17,Bronze,991,2025-06-10,true,South
+C016,Frank,Chicago,GA,,Gold,600,2025-01-04,false,East
+C017,Diana,New York,CO,2024-10-03,Bronze,849,2025-04-27,true,South
+C018,Charlie,Miami,GA,2024-03-09,Platinum,316,2025-05-25,true,East
+C019,Grace,Seattle,FL,2024-09-15,,353,2025-02-03,false,North
+C020,Jack,Atlanta,CO,2024-10-08,Bronze,172,2025-06-21,true,South
