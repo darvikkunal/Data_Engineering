@@ -22,3 +22,15 @@ DE_Drill/pyspark/pyspark_rdd1.ipynb
 DE_Drill/pyspark/rdd.txt/
 DE_Drill/pyspark/rdd_sequence/
 DE_Drill/pyspark/rdd_sequence_test_pair/
+
+# Generated dataset files (Spark output)
+DE_Drill/dataset/*_csv/
+DE_Drill/dataset/*_parquet/
+DE_Drill/dataset/*.orc/
+DE_Drill/dataset/*.parquet/
+
+# Auto-generated Spark Derby metastore
+derby.log
+metastore_db/
+DE_Drill/pyspark/derby.log
+DE_Drill/pyspark/metastore_db/
